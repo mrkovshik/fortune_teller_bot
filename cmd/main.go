@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -20,15 +21,32 @@ type Update struct {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Println("Failed to read body:", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if len(body) == 0 {
+		log.Println("Empty body (maybe Telegram ping)")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	log.Println("BODY:", string(body))
+
 	var update Update
-	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
-		log.Println("Failed to decode update:", err)
+	if err := json.Unmarshal(body, &update); err != nil {
+		log.Println("Failed to decode JSON:", err)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	log.Printf("Got message: %s", update.Message.Text)
 
 	sendMessage(update.Message.Chat.ID, "Вы написали: "+update.Message.Text)
+	w.WriteHeader(http.StatusOK)
 }
 
 func sendMessage(chatID int64, text string) {
