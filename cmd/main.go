@@ -3,13 +3,13 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"github.com/joho/godotenv"
 	"io"
 	"log"
 	"net/http"
 	"os"
 )
-
-const botToken = "8310935771:AAFWTHsC4C-Yi1UKN22NQwVIvkosjrDdAao"
 
 type Update struct {
 	Message struct {
@@ -19,6 +19,13 @@ type Update struct {
 		Text string `json:"text"`
 	} `json:"message"`
 }
+
+var url string
+
+const (
+	telegramApiUrl = "https://api.telegram.org/bot"
+	sendMessageUrl = "sendMessage"
+)
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
@@ -50,7 +57,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendMessage(chatID int64, text string) {
-	url := "https://api.telegram.org/bot" + botToken + "/sendMessage"
 	payload := map[string]interface{}{
 		"chat_id": chatID,
 		"text":    text,
@@ -60,11 +66,14 @@ func sendMessage(chatID int64, text string) {
 }
 
 func main() {
+	_ = godotenv.Load()
 	http.HandleFunc("/", handler)
+	token := os.Getenv("TELEGRAM_TOKEN")
 	port := os.Getenv("PORT") // Render требует переменную PORT
 	if port == "" {
 		port = "8080"
 	}
+	url = fmt.Sprintf("%s/%s/%s", telegramApiUrl, token, sendMessageUrl)
 	log.Println("Listening on port", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
