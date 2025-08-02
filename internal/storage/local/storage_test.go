@@ -25,7 +25,7 @@ var _ = Describe("Local storage functions test", func() {
 		booksList, err := testStorage.ListBooks()
 		Expect(err).NotTo(HaveOccurred())
 		Expect(booksList).NotTo(BeNil())
-		Expect(len(booksList)).To(Equal(1))
+		Expect(len(booksList)).To(Equal(2))
 	})
 
 	It("Takes random sentence from book", func() {
