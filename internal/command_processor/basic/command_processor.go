@@ -5,19 +5,20 @@ import (
 	"strings"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/command_processor"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage"
+	store "github.com/mrkovshik/fortune_teller_bot/internal/storage"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/local"
 	"go.uber.org/zap"
 )
 
 type CommandProcessor struct {
 	logger  *zap.SugaredLogger
-	storage storage.Storage
+	storage store.Storage
 }
 
-func NewCommandProcessor(logger *zap.SugaredLogger) *CommandProcessor {
+func NewCommandProcessor(logger *zap.SugaredLogger, storage store.Storage) *CommandProcessor {
 	return &CommandProcessor{
-		logger: logger,
+		logger:  logger,
+		storage: storage,
 	}
 }
 

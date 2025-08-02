@@ -11,6 +11,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/mrkovshik/fortune_teller_bot/internal/command_processor/basic"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/local"
 	"go.uber.org/zap"
 )
 
@@ -55,7 +56,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sugaredLogger.Infof("Got message: %s", update.Message.Text)
-	commandProcessor := basic.NewCommandProcessor(sugaredLogger)
+	storage := local.NewStorage(sugaredLogger)
+	commandProcessor := basic.NewCommandProcessor(sugaredLogger, storage)
 	message, err := commandProcessor.ProcessCommand(update.Message.Text)
 	if err != nil {
 		sugaredLogger.Errorf("Failed to process message: %s", err)
