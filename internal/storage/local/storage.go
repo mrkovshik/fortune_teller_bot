@@ -88,8 +88,12 @@ func (s *Storage) ListBooks() ([]string, error) {
 	var bookNames []string
 	for _, entry := range entries {
 		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".fb2") {
-
-			bookNames = append(bookNames, fileNameToTitle[entry.Name()])
+			bookTitle, exist := fileNameToTitle[entry.Name()]
+			if !exist {
+				s.logger.Warnw("can't find book title for file. Please add it to 'fileNameToTitle' map or delete the file", "name", entry.Name())
+				continue
+			}
+			bookNames = append(bookNames, bookTitle)
 		}
 	}
 	return bookNames, nil
