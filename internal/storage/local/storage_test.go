@@ -7,8 +7,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const dorianGreyTitle = "Оскар Уайлд - Портрет Дориана Грея"
-
 var _ = Describe("Local storage functions test", func() {
 	var (
 		logger      *zap.Logger

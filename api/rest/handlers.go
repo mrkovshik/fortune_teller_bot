@@ -19,6 +19,7 @@ const (
 func (s *restAPIServer) MessageReplyHandler(ctx context.Context) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var update model.Update
+		s.logger.Infof("Got request %s", c.Request.RequestURI)
 		if c.Request.Body == nil {
 			s.logger.Info("Empty body (maybe Telegram ping)")
 			c.AbortWithStatus(http.StatusOK)

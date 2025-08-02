@@ -26,6 +26,7 @@ func NewRestAPIServer(commandProcessor command_processor.CommandProcessor, cfg *
 }
 func (s *restAPIServer) RunServer(ctx context.Context) error {
 	router := gin.Default()
-	router.GET("/", s.MessageReplyHandler(ctx))
+	router.POST("/telegram", s.MessageReplyHandler(ctx))
+	router.POST("/", s.MessageReplyHandler(ctx))
 	return router.Run(fmt.Sprintf("%s:%s", s.cfg.Host, s.cfg.Port))
 }
