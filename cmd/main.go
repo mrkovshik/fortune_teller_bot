@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/joho/godotenv"
 	"io"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Update struct {
@@ -69,7 +70,7 @@ func main() {
 	_ = godotenv.Load()
 	http.HandleFunc("/", handler)
 	token := os.Getenv("TELEGRAM_TOKEN")
-	port := os.Getenv("PORT") // Render требует переменную PORT
+	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
