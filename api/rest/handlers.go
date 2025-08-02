@@ -30,7 +30,7 @@ func (s *restAPIServer) MessageReplyHandler(ctx context.Context) func(c *gin.Con
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
-		s.logger.Infof("Got message: %s", update.Message.Text)
+		s.logger.Infof("Got message from chatID: %d : %s", update.Message.Chat.ID, update.Message.Text)
 
 		url := fmt.Sprintf("%s%s/%s", telegramApiUrl, s.cfg.Token, sendMessageUrl)
 
