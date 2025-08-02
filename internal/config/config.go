@@ -6,7 +6,7 @@ import (
 
 type Config struct {
 	Port  string `env:"PORT" envDefault:"8080"`
-	Host  string `env:"HOST" envDefault:"localhost"`
+	Host  string `env:"HOST" envDefault:""`
 	Token string `env:"TELEGRAM_TOKEN"`
 }
 
