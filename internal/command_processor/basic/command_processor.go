@@ -29,7 +29,7 @@ func (cp *CommandProcessor) ProcessCommand(command string) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf(`failed to list books: %w`, err)
 		}
-		return strings.Join(list, "/n"), nil // TODO: use template
+		return strings.Join(list, "\n"), nil // TODO: use template
 	case command_processor.GetMagicCommandName:
 		return cp.storage.GetRandomSentenceFromBook(local.DorianGreyTitle)
 	default:

@@ -90,7 +90,7 @@ func main() {
 	}
 	defer logger.Sync()
 	sugaredLogger = logger.Sugar()
-	url = fmt.Sprintf("%s/%s/%s", telegramApiUrl, token, sendMessageUrl)
+	url = fmt.Sprintf("%s%s/%s", telegramApiUrl, token, sendMessageUrl)
 	log.Println("Listening on port", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
