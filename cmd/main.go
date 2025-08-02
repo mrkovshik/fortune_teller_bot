@@ -54,9 +54,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sugaredLogger.Info("Got message: %s", update.Message.Text)
+	sugaredLogger.Infof("Got message: %s", update.Message.Text)
 	commandProcessor := basic.NewCommandProcessor(sugaredLogger)
 	message, err := commandProcessor.ProcessCommand(update.Message.Text)
+	if err != nil {
+		sugaredLogger.Infof("Failed to process message: %s", err)
+	}
 	sendMessage(update.Message.Chat.ID, message)
 	w.WriteHeader(http.StatusOK)
 }
