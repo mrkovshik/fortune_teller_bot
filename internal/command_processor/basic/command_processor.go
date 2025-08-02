@@ -32,6 +32,8 @@ func (cp *CommandProcessor) ProcessCommand(command string) (string, error) {
 		return strings.Join(list, "\n"), nil // TODO: use template
 	case command_processor.GetMagicCommandName:
 		return cp.storage.GetRandomSentenceFromBook(local.DorianGreyTitle)
+	case command_processor.StartCommandName:
+		return fmt.Sprintf("Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы узнать ответ на ваш вопрос, выберите %s", command_processor.ListBooksCommandName, command_processor.GetMagicCommandName), nil
 	default:
 		return "Неизвестная команда", nil
 	}
