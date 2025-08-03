@@ -45,6 +45,7 @@ func (s *restAPIServer) MessageReplyHandler(ctx context.Context) func(c *gin.Con
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
+		s.logger.Info("Sending callback answer")
 		if update.CallbackQuery != nil {
 			if err := s.answerCallbackQuery(update.CallbackQuery.ID); err != nil {
 				s.logger.Error("sendMessage", err)

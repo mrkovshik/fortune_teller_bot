@@ -42,10 +42,44 @@ func (cp *UpdateProcessor) ProcessUpdate(update *model.Update) (map[string]inter
 	payload := map[string]interface{}{
 		"chat_id": chatID,
 	}
+
 	state, err := cp.stateStorage.Get(chatID)
 	if err != nil {
 		return nil, err
 	}
+	switch command {
+	case update_processor.ListBooksCommandName:
+		books, err := cp.bookStorage.ListBooks()
+		if err != nil {
+			return nil, fmt.Errorf(`failed to list books: %w`, err)
+		}
+		var buttons [][]map[string]string
+		for _, book := range books {
+			button := map[string]string{
+				"text":          book,
+				"callback_data": string(model.SelectBook) + book,
+			}
+			buttons = append(buttons, []map[string]string{button})
+		}
+		payload["text"] = "Выберите книгу, по которой будем предсказывать будущее:"
+		payload["reply_markup"] = map[string]interface{}{
+			"inline_keyboard": buttons,
+		}
+		state.CurrentStep = model.SelectBook
+		cp.stateStorage.Update(chatID, state)
+
+	case update_processor.GetMagicCommandName:
+		text, err := cp.bookStorage.GetRandomSentenceFromBook(local.GetRandomBookTitle())
+		if err != nil {
+			return nil, err
+		}
+		payload["text"] = text
+
+	case update_processor.StartCommandName:
+		cp.stateStorage.Clear(chatID)
+		payload["text"] = fmt.Sprintf("Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы узнать ответ на ваш вопрос, выберите %s", update_processor.ListBooksCommandName, update_processor.GetMagicCommandName)
+	}
+
 	switch state.CurrentStep {
 	case model.SelectBook:
 		if update.CallbackQuery == nil {
@@ -58,40 +92,8 @@ func (cp *UpdateProcessor) ProcessUpdate(update *model.Update) (map[string]inter
 		}
 		payload["text"] = text
 	default:
-		switch command {
-		case update_processor.ListBooksCommandName:
-			books, err := cp.bookStorage.ListBooks()
-			if err != nil {
-				return nil, fmt.Errorf(`failed to list books: %w`, err)
-			}
-			var buttons [][]map[string]string
-			for _, book := range books {
-				button := map[string]string{
-					"text":          book,
-					"callback_data": string(model.SelectBook) + book,
-				}
-				buttons = append(buttons, []map[string]string{button})
-			}
-			payload["text"] = "Выберите книгу, по которой будем предсказывать будущее:"
-			payload["reply_markup"] = map[string]interface{}{
-				"inline_keyboard": buttons,
-			}
-			state.CurrentStep = model.SelectBook
-			cp.stateStorage.Update(chatID, state)
-
-		case update_processor.GetMagicCommandName:
-			text, err := cp.bookStorage.GetRandomSentenceFromBook(local.GetRandomBookTitle())
-			if err != nil {
-				return nil, err
-			}
-			payload["text"] = text
-
-		case update_processor.StartCommandName:
-			cp.stateStorage.Clear(chatID)
-			payload["text"] = fmt.Sprintf("Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы узнать ответ на ваш вопрос, выберите %s", update_processor.ListBooksCommandName, update_processor.GetMagicCommandName)
-		default:
-			payload["text"] = "Неизвестная команда"
-		}
+		payload["text"] = fmt.Sprintf("Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы узнать ответ на ваш вопрос, выберите %s", update_processor.ListBooksCommandName, update_processor.GetMagicCommandName)
 	}
+
 	return payload, nil
 }
