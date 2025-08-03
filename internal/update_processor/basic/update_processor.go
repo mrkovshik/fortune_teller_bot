@@ -66,7 +66,7 @@ func (cp *UpdateProcessor) ProcessUpdate(update *model.Update) (map[string]inter
 		for _, book := range books {
 			button := InlineKeyboardButton{
 				Text:         book,
-				CallbackData: fmt.Sprintf("%s:%s", model.SelectBook, book),
+				CallbackData: fmt.Sprintf("%s:%s", model.SelectBook, local.TitleToFileName[book]),
 			}
 			// одна кнопка в строке
 			keyboard = append(keyboard, []InlineKeyboardButton{button})
@@ -97,7 +97,12 @@ func (cp *UpdateProcessor) ProcessUpdate(update *model.Update) (map[string]inter
 			if update.CallbackQuery == nil {
 				return nil, fmt.Errorf("step %s must have a callback query", state.CurrentStep)
 			}
-			bookTitle := strings.TrimPrefix(update.CallbackQuery.Data, string(model.SelectBook))
+			fileName := strings.TrimPrefix(update.CallbackQuery.Data, string(model.SelectBook))
+			bookTitle, exist := local.FileNameToTitle[fileName]
+			if !exist {
+				payload["text"] = "Книга с таким названием не найдена"
+				return payload, nil
+			}
 			text, err := cp.bookStorage.GetRandomSentenceFromBook(bookTitle)
 			if err != nil {
 				return nil, err

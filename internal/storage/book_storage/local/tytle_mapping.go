@@ -5,15 +5,15 @@ const (
 	ThreeOnTheBoatTitle = "Дж. К. Джером - Трое в лодке, не считая собаки"
 )
 
-var titleToFileName map[string]string = map[string]string{
-	DorianGreyTitle:     "oskar_wild_dorian_grey.fb2",
-	ThreeOnTheBoatTitle: "jerom_troe_v_lodke.fb2",
+var TitleToFileName = map[string]string{
+	DorianGreyTitle:     "1",
+	ThreeOnTheBoatTitle: "2",
 }
 
-var fileNameToTitle = make(map[string]string)
+var FileNameToTitle = make(map[string]string)
 
 func init() {
-	fileNameToTitle = reverseMap(titleToFileName)
+	FileNameToTitle = reverseMap(TitleToFileName)
 }
 
 func reverseMap(in map[string]string) (out map[string]string) {
@@ -25,7 +25,7 @@ func reverseMap(in map[string]string) (out map[string]string) {
 }
 
 func GetRandomBookTitle() string {
-	for title := range titleToFileName { // no need to use random - map iteration is random itself
+	for title := range TitleToFileName { // no need to use random - map iteration is random itself
 		return title
 	}
 	return ""

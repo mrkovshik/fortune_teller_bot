@@ -43,11 +43,11 @@ type FictionBook struct {
 }
 
 func (s *Storage) GetRandomSentenceFromBook(bookName string) (string, error) {
-	fileName, exists := titleToFileName[bookName]
+	fileName, exists := TitleToFileName[bookName]
 	if !exists {
 		return fmt.Sprintf("К сожалению, пока такой книги у нас нет( Пожалуйста, выберите книгу из списка %s", update_processor.ListBooksCommandName), nil
 	}
-	sentences, err := s.LoadBookText(fileName)
+	sentences, err := s.LoadBookText(fileName + ".fb2")
 	if err != nil {
 		return "", err
 	}
@@ -93,9 +93,9 @@ func (s *Storage) ListBooks() ([]string, error) {
 	var bookNames []string
 	for _, entry := range entries {
 		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".fb2") {
-			bookTitle, exist := fileNameToTitle[entry.Name()]
+			bookTitle, exist := FileNameToTitle[entry.Name()]
 			if !exist {
-				s.logger.Warnw("can't find book title for file. Please add it to 'fileNameToTitle' map or delete the file", "name", entry.Name())
+				s.logger.Warnw("can't find book title for file. Please add it to 'FileNameToTitle' map or delete the file", "name", entry.Name())
 				continue
 			}
 			bookNames = append(bookNames, bookTitle)
