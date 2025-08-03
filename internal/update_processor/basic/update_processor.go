@@ -75,6 +75,7 @@ func (cp *UpdateProcessor) ProcessUpdate(update *model.Update) (map[string]inter
 		payload["reply_markup"] = InlineKeyboardMarkup{
 			InlineKeyboard: keyboard,
 		}
+		cp.logger.Info(keyboard)
 		state.CurrentStep = model.SelectBook
 		cp.stateStorage.Update(chatID, state)
 
