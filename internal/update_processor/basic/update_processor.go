@@ -69,6 +69,7 @@ func (cp *UpdateProcessor) ProcessUpdate(update *model.Update) (map[string]inter
 		cp.stateStorage.Update(chatID, state)
 
 	case update_processor.GetMagicCommandName:
+		cp.stateStorage.Clear(chatID)
 		text, err := cp.bookStorage.GetRandomSentenceFromBook(local.GetRandomBookTitle())
 		if err != nil {
 			return nil, err
@@ -78,22 +79,22 @@ func (cp *UpdateProcessor) ProcessUpdate(update *model.Update) (map[string]inter
 	case update_processor.StartCommandName:
 		cp.stateStorage.Clear(chatID)
 		payload["text"] = fmt.Sprintf("Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы узнать ответ на ваш вопрос, выберите %s", update_processor.ListBooksCommandName, update_processor.GetMagicCommandName)
-	}
 
-	switch state.CurrentStep {
-	case model.SelectBook:
-		if update.CallbackQuery == nil {
-			return nil, fmt.Errorf("step %s must have a callback query", state.CurrentStep)
-		}
-		bookTitle := strings.TrimPrefix(update.CallbackQuery.Data, string(model.SelectBook))
-		text, err := cp.bookStorage.GetRandomSentenceFromBook(bookTitle)
-		if err != nil {
-			return nil, err
-		}
-		payload["text"] = text
 	default:
-		payload["text"] = fmt.Sprintf("Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы узнать ответ на ваш вопрос, выберите %s", update_processor.ListBooksCommandName, update_processor.GetMagicCommandName)
+		switch state.CurrentStep {
+		case model.SelectBook:
+			if update.CallbackQuery == nil {
+				return nil, fmt.Errorf("step %s must have a callback query", state.CurrentStep)
+			}
+			bookTitle := strings.TrimPrefix(update.CallbackQuery.Data, string(model.SelectBook))
+			text, err := cp.bookStorage.GetRandomSentenceFromBook(bookTitle)
+			if err != nil {
+				return nil, err
+			}
+			payload["text"] = text
+		default:
+			payload["text"] = fmt.Sprintf("Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы узнать ответ на ваш вопрос, выберите %s", update_processor.ListBooksCommandName, update_processor.GetMagicCommandName)
+		}
 	}
-
 	return payload, nil
 }
