@@ -10,6 +10,15 @@ import (
 	"go.uber.org/zap"
 )
 
+type InlineKeyboardButton struct {
+	Text         string `json:"text"`
+	CallbackData string `json:"callback_data"`
+}
+
+type InlineKeyboardMarkup struct {
+	InlineKeyboard [][]InlineKeyboardButton `json:"inline_keyboard"`
+}
+
 type BookStorage interface {
 	GetRandomSentenceFromBook(bookName string) (string, error)
 	ListBooks() ([]string, error)
@@ -53,17 +62,18 @@ func (cp *UpdateProcessor) ProcessUpdate(update *model.Update) (map[string]inter
 		if err != nil {
 			return nil, fmt.Errorf(`failed to list books: %w`, err)
 		}
-		var buttons [][]map[string]string
+		var keyboard [][]InlineKeyboardButton
 		for _, book := range books {
-			button := map[string]string{
-				"text":          book,
-				"callback_data": string(model.SelectBook) + book,
+			button := InlineKeyboardButton{
+				Text:         book,
+				CallbackData: string(model.SelectBook) + book,
 			}
-			buttons = append(buttons, []map[string]string{button})
+			// одна кнопка в строке
+			keyboard = append(keyboard, []InlineKeyboardButton{button})
 		}
 		payload["text"] = "Выберите книгу, по которой будем предсказывать будущее:"
-		payload["reply_markup"] = map[string]interface{}{
-			"inline_keyboard": buttons,
+		payload["reply_markup"] = InlineKeyboardMarkup{
+			InlineKeyboard: keyboard,
 		}
 		state.CurrentStep = model.SelectBook
 		cp.stateStorage.Update(chatID, state)

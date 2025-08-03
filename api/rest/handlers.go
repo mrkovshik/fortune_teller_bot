@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -60,8 +61,15 @@ func (s *restAPIServer) MessageReplyHandler(ctx context.Context) func(c *gin.Con
 func (s *restAPIServer) sendMessage(payload map[string]interface{}) error {
 	url := fmt.Sprintf("%s%s/%s", telegramApiUrl, s.cfg.Token, sendMessageUrl)
 	body, _ := json.Marshal(payload)
-	_, err := http.Post(url, "application/json", bytes.NewBuffer(body)) // TODO: use lib
-	return err
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body)) // TODO: use lib
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+	s.logger.Infof("Telegram response: %s", string(respBody))
+	return nil
 }
 
 func (s *restAPIServer) answerCallbackQuery(callbackID string) error {
