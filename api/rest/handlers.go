@@ -32,8 +32,10 @@ func (s *restAPIServer) MessageReplyHandler(ctx context.Context) func(c *gin.Con
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
-		s.logger.Infof("Got message from chatID: %d : %s", update.Message.Chat.ID, update.Message.Text)
 
+		if update.Message != nil {
+			s.logger.Infof("Got message from chatID: %d : %s", update.Message.Chat.ID, update.Message.Text)
+		}
 		reply, err := s.updateProcessor.ProcessUpdate(&update)
 		if err != nil {
 			s.logger.Error("ProcessUpdate", err)
