@@ -66,7 +66,7 @@ func (cp *UpdateProcessor) ProcessUpdate(update *model.Update) (map[string]inter
 		for _, book := range books {
 			button := InlineKeyboardButton{
 				Text:         book,
-				CallbackData: string(model.SelectBook) + book,
+				CallbackData: fmt.Sprintf("%s:%s", model.SelectBook, book),
 			}
 			// одна кнопка в строке
 			keyboard = append(keyboard, []InlineKeyboardButton{button})
