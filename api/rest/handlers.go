@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	telegramApiUrl = "https://api.telegram.org/bot"
-	sendMessageUrl = "sendMessage"
+	telegramApiUrl    = "https://api.telegram.org/bot"
+	sendMessageUrl    = "sendMessage"
+	answerCallbackUrl = "answerCallbackQuery"
 )
 
 func (s *restAPIServer) MessageReplyHandler(ctx context.Context) func(c *gin.Context) {
@@ -32,29 +33,41 @@ func (s *restAPIServer) MessageReplyHandler(ctx context.Context) func(c *gin.Con
 		}
 		s.logger.Infof("Got message from chatID: %d : %s", update.Message.Chat.ID, update.Message.Text)
 
-		url := fmt.Sprintf("%s%s/%s", telegramApiUrl, s.cfg.Token, sendMessageUrl)
-
-		reply, err := s.commandProcessor.ProcessCommand(update.Message.Text)
+		reply, err := s.updateProcessor.ProcessUpdate(&update)
 		if err != nil {
-			s.logger.Error("ProcessCommand", err)
+			s.logger.Error("ProcessUpdate", err)
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
-		s.logger.Infof("Sending reply: %s", reply)
-		if err := sendMessage(update.Message.Chat.ID, reply, url); err != nil {
+		s.logger.Infof("Sending reply: %s", reply["text"])
+		if err := s.sendMessage(reply); err != nil {
 			s.logger.Error("sendMessage", err)
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
+		}
+		if update.CallbackQuery != nil {
+			if err := s.answerCallbackQuery(update.CallbackQuery.ID); err != nil {
+				s.logger.Error("sendMessage", err)
+				c.AbortWithStatus(http.StatusBadRequest)
+				return
+			}
 		}
 		c.AbortWithStatus(http.StatusOK)
 	}
 }
 
-func sendMessage(chatID int64, text string, url string) error {
+func (s *restAPIServer) sendMessage(payload map[string]interface{}) error {
+	url := fmt.Sprintf("%s%s/%s", telegramApiUrl, s.cfg.Token, sendMessageUrl)
+	body, _ := json.Marshal(payload)
+	_, err := http.Post(url, "application/json", bytes.NewBuffer(body)) // TODO: use lib
+	return err
+}
+
+func (s *restAPIServer) answerCallbackQuery(callbackID string) error {
 	payload := map[string]interface{}{
-		"chat_id": chatID,
-		"text":    text,
+		"callback_query_id": callbackID,
 	}
+	url := fmt.Sprintf("%s%s/%s", telegramApiUrl, s.cfg.Token, answerCallbackUrl)
 	body, _ := json.Marshal(payload)
 	_, err := http.Post(url, "application/json", bytes.NewBuffer(body)) // TODO: use lib
 	return err

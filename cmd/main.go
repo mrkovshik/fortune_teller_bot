@@ -6,14 +6,13 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/mrkovshik/fortune_teller_bot/api/rest"
-	"github.com/mrkovshik/fortune_teller_bot/internal/command_processor/basic"
-	"github.com/mrkovshik/fortune_teller_bot/internal/config"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/local"
-	"go.uber.org/zap"
-)
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/state_storage/in_memory"
+	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor/basic"
 
-var (
-	sugaredLogger *zap.SugaredLogger
+	"github.com/mrkovshik/fortune_teller_bot/internal/config"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/book_storage/local"
+
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -27,10 +26,10 @@ func main() {
 		log.Fatal(err)
 	}
 	defer logger.Sync()
-	sugaredLogger = logger.Sugar()
-
-	storage := local.NewStorage(sugaredLogger)
-	commandProcessor := basic.NewCommandProcessor(sugaredLogger, storage)
+	sugaredLogger := logger.Sugar()
+	bookStorage := local.NewStorage(sugaredLogger)
+	stateStorage := in_memory.NewStateStorage()
+	commandProcessor := basic.NewUpdateProcessor(bookStorage, stateStorage, sugaredLogger)
 	server := rest.NewRestAPIServer(commandProcessor, cfg, sugaredLogger)
 	sugaredLogger.Fatal(server.RunServer(context.TODO()))
 }

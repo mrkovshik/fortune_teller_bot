@@ -23,3 +23,10 @@ func reverseMap(in map[string]string) (out map[string]string) {
 	}
 	return
 }
+
+func GetRandomBookTitle() string {
+	for title := range titleToFileName { // no need to use random - map iteration is random itself
+		return title
+	}
+	return ""
+}

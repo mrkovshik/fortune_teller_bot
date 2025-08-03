@@ -10,11 +10,12 @@ import (
 	"time"
 
 	"github.com/mrkovshik/fortune_teller_bot/api/rest"
-	"github.com/mrkovshik/fortune_teller_bot/internal/command_processor"
-	"github.com/mrkovshik/fortune_teller_bot/internal/command_processor/basic"
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/local"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/book_storage/local"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/state_storage/in_memory"
+	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor"
+	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor/basic"
 	"github.com/mrkovshik/yandex_diploma/api"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -31,8 +32,9 @@ var _ = Describe("", func() {
 	BeforeEach(func() {
 		logger, err = zap.NewDevelopment()
 		Expect(err).NotTo(HaveOccurred())
-		testStorage := local.NewStorage(logger.Sugar())
-		proc := basic.NewCommandProcessor(logger.Sugar(), testStorage)
+		testBookStorage := local.NewStorage(logger.Sugar())
+		testStateStorage := in_memory.NewStateStorage()                                     // TODO: use mock
+		proc := basic.NewUpdateProcessor(testBookStorage, testStateStorage, logger.Sugar()) // TODO: use mock
 		cfg, err = config.GetConfig()
 		Expect(err).NotTo(HaveOccurred())
 		srv = rest.NewRestAPIServer(proc, cfg, logger.Sugar())
@@ -47,11 +49,11 @@ var _ = Describe("", func() {
 		err := waitForServer(fmt.Sprintf("%s:%s", cfg.Host, cfg.Port), 3*time.Second)
 		Expect(err).NotTo(HaveOccurred())
 		upd := model.Update{
-			Message: model.Message{
+			Message: &model.Message{
 				Chat: model.Chat{
 					ID: 111,
 				},
-				Text: command_processor.GetMagicCommandName,
+				Text: update_processor.GetMagicCommandName,
 			},
 		}
 		body, _ := json.Marshal(upd)

@@ -9,6 +9,6 @@ type ChatStep string
 
 const (
 	Initial        = ChatStep("Initial")
-	BookChoosing   = ChatStep("BookChoosing")
-	AskingQuestion = ChatStep("AskingQuestion")
+	SelectBook     = ChatStep("select_book")
+	AskingQuestion = ChatStep("asking_question")
 )

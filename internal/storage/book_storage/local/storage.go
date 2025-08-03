@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/embedded"
+	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor"
 	"go.uber.org/zap"
 )
 
@@ -42,7 +43,11 @@ type FictionBook struct {
 }
 
 func (s *Storage) GetRandomSentenceFromBook(bookName string) (string, error) {
-	sentences, err := s.LoadBookText(titleToFileName[bookName])
+	fileName, exists := titleToFileName[bookName]
+	if !exists {
+		return fmt.Sprintf("К сожалению, пока такой книги у нас нет( Пожалуйста, выберите книгу из списка %s", update_processor.ListBooksCommandName), nil
+	}
+	sentences, err := s.LoadBookText(fileName)
 	if err != nil {
 		return "", err
 	}

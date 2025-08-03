@@ -1,4 +1,4 @@
-package command_processor
+package update_processor
 
 const (
 	GetMagicCommandName  = "/get_magic"

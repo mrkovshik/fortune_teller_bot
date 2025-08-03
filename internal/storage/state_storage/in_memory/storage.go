@@ -1,8 +1,6 @@
 package in_memory
 
 import (
-	"errors"
-
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 )
 
@@ -17,10 +15,7 @@ func (s StateStorage) Update(chatID int64, state model.ChatState) {
 }
 
 func (s StateStorage) Get(chatID int64) (model.ChatState, error) {
-	state, ok := s[chatID]
-	if !ok {
-		return model.ChatState{}, errors.New("chat does not exist")
-	}
+	state, _ := s[chatID]
 	return state, nil
 }
 
