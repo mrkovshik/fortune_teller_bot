@@ -1,0 +1,168 @@
+run:
+  timeout: 15m
+  tests: true
+  modules-download-mode: readonly
+  allow-parallel-runners: false
+output:
+  formats:
+    - format: colored-line-number
+linters-settings:
+  gofmt:
+    simplify: true
+  godot:
+    scope: all
+    exclude:
+      - "^(\\s)?FIXME"
+      - "^(\\s)?TODO"
+      - "^(\\s)?\\+"
+      - "^(\\s)?[a-z]+"
+      - "^(\\s)?\\)$"
+      - "^(\\s)?}\\)$"
+      - "}$"
+      - ",$"
+  gosec:
+    # To select a subset of rules to run.
+    # Available rules: https://github.com/securego/gosec#available-rules
+    # Default: [] - means include all rules
+    includes:
+      - G101 # Look for hard coded credentials
+      - G102 # Bind to all interfaces
+      - G103 # Audit the use of unsafe block
+      - G104 # Audit errors not checked
+      - G106 # Audit the use of ssh.InsecureIgnoreHostKey
+      - G107 # Url provided to HTTP request as taint input
+      - G108 # Profiling endpoint automatically exposed on /debug/pprof
+      - G109 # Potential Integer overflow made by strconv.Atoi result conversion to int16/32
+      - G110 # Potential DoS vulnerability via decompression bomb
+      - G111 # Potential directory traversal
+      - G112 # Potential slowloris attack
+      - G113 # Usage of Rat.SetString in math/big with an overflow (CVE-2022-23772)
+      - G114 # Use of net/http serve function that has no support for setting timeouts
+      - G201 # SQL query construction using format string
+      - G202 # SQL query construction using string concatenation
+      - G203 # Use of unescaped data in HTML templates
+      - G204 # Audit use of command execution
+      - G301 # Poor file permissions used when creating a directory
+      - G302 # Poor file permissions used with chmod
+      - G303 # Creating tempfile using a predictable path
+      - G304 # File path provided as taint input
+      - G305 # File traversal when extracting zip/tar archive
+      - G306 # Poor file permissions used when writing to a new file
+      - G307 # Poor file permissions used when creating a file with os.Create
+      - G401 # Detect the usage of DES, RC4, MD5 or SHA1
+      - G402 # Look for bad TLS connection settings
+      - G403 # Ensure minimum RSA key length of 2048 bits
+      - G404 # Insecure random number source (rand)
+      - G601 # Implicit memory aliasing of items from a range statement
+      - G602 # Slice access out of bounds
+  revive:
+    enable-all-rules: true
+    ignore-generated-header: true
+    rules:
+      - name: dot-imports
+        severity: warning
+        disabled: true
+      - name: add-constant
+        severity: warning
+        disabled: true
+      - name: line-length-limit
+        severity: warning
+        disabled: true
+      - name: var-naming
+        severity: warning
+        disabled: true
+      - name: bare-return
+        severity: warning
+        disabled: true
+      - name: max-public-structs
+        severity: warning
+        disabled: true
+      - name: confusing-results
+        severity: warning
+        disabled: true
+      - name: cognitive-complexity
+        severity: warning
+        disabled: true
+      - name: unhandled-error
+        severity: warning
+        disabled: true
+        arguments:
+          - "fmt.Printf"
+      - name: use-any
+        severity: warning
+        disabled: true
+      - name: function-result-limit
+        severity: warning
+        disabled: true
+      - name: cyclomatic
+        severity: warning
+        disabled: true
+      - name: flag-parameter
+        severity: warning
+        disabled: true
+      - name: struct-tag
+        severity: warning
+        disabled: false
+        exclude: [""]
+        arguments:
+          - "json,inline"
+      - name: flag-parameter
+        severity: warning
+        disabled: true
+      - name: function-length
+        severity: warning
+        disabled: true
+      - name: argument-limit
+        severity: warning
+        disabled: true
+      - name: import-shadowing
+        severity: warning
+        disabled: true
+      - name: confusing-naming
+        severity: warning
+        disabled: true
+      - name: unchecked-type-assertion
+        severity: warning
+        disabled: true
+      - name: unexported-return
+        severity: warning
+        disabled: true
+      - name: blank-imports
+        severity: warning
+        disabled: true
+      - name: unused-receiver
+        severity: warning
+        disabled: true
+      - name: comment-spacings
+        severity: warning
+        disabled: false
+        arguments:
+          - +kubebuilder
+          - nolint
+linters:
+  disable-all: true
+  enable:
+    - importas
+    - errcheck
+    - gosimple
+    - govet
+    - godot
+    - ineffassign
+    - staticcheck
+    - unused
+    - containedctx
+    - contextcheck
+    - nilnil
+    - nilerr
+    - gci
+    - asciicheck
+    - unconvert
+    - loggercheck
+    - copyloopvar
+    - asasalint
+    - durationcheck
+    - makezero
+    - reassign
+    - revive
+issues:
+  fix: false
