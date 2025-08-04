@@ -104,6 +104,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 		"chat_id": chatID,
 	}
 	fileName := strings.TrimPrefix(callback.Data, string(model.SelectBook))
+	fileName = strings.TrimPrefix(fileName, ":")
 	bookTitle, exist := local.FileNameToTitle[fileName]
 	if !exist {
 		payload["text"] = fmt.Sprintf("Книга с таким именем файла не найдена: %s", fileName)
