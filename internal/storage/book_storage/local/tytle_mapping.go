@@ -11,7 +11,7 @@ var TitleToFileName = map[string]string{
 	DorianGreyTitle:     "1",
 	ThreeOnTheBoatTitle: "2",
 	GospodaGolovlevy:    "3",
-	ZolotoyTelenok:      "4",
+	//ZolotoyTelenok:      "4",
 }
 
 var FileNameToTitle = make(map[string]string)
