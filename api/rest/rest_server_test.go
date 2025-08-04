@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"time"
@@ -22,14 +23,15 @@ import (
 	"go.uber.org/zap"
 )
 
-var _ = Describe("", func() {
-	var (
-		cfg    *config.Config
-		logger *zap.Logger
-		err    error
-		srv    api.Server
-	)
-	BeforeEach(func() {
+var (
+	cfg    *config.Config
+	logger *zap.Logger
+	err    error
+	srv    api.Server
+)
+
+var _ = Describe("MessageReplyHandler", Ordered, func() {
+	BeforeAll(func() {
 		logger, err = zap.NewDevelopment()
 		Expect(err).NotTo(HaveOccurred())
 		testBookStorage := local.NewStorage(logger.Sugar())
@@ -38,9 +40,6 @@ var _ = Describe("", func() {
 		cfg, err = config.GetConfig()
 		Expect(err).NotTo(HaveOccurred())
 		srv = rest.NewRestAPIServer(proc, cfg, logger.Sugar())
-	})
-
-	It("", func() {
 		ctx := context.Background()
 		go func() {
 			err := srv.RunServer(ctx)
@@ -48,6 +47,9 @@ var _ = Describe("", func() {
 		}()
 		err := waitForServer(fmt.Sprintf("%s:%s", cfg.Host, cfg.Port), 3*time.Second)
 		Expect(err).NotTo(HaveOccurred())
+	})
+
+	It("Responds request for random book quote", func() {
 		upd := model.Update{
 			Message: &model.Message{
 				Chat: model.Chat{
@@ -61,6 +63,43 @@ var _ = Describe("", func() {
 		resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
+		defer resp.Body.Close()
+		respBody, err := io.ReadAll(resp.Body)
+		Expect(err).NotTo(HaveOccurred())
+
+		var reply map[string]interface{}
+		err = json.Unmarshal(respBody, &reply)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(reply).To(HaveKey("text"))
+		Expect(len(reply["text"].(string))).To(BeNumerically(">", 20))
+	})
+
+	It("Responds request for specific book quote", func() {
+		upd := model.Update{
+			CallbackQuery: &model.CallbackQuery{
+				ID: "321",
+				From: model.Chat{
+					ID: 123,
+				},
+				Data: "2",
+			},
+		}
+		body, _ := json.Marshal(upd)
+		url := fmt.Sprintf("http://%s:%s/telegram", cfg.Host, cfg.Port)
+		resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(resp.StatusCode).To(Equal(http.StatusOK))
+		defer resp.Body.Close()
+		respBody, err := io.ReadAll(resp.Body)
+		Expect(err).NotTo(HaveOccurred())
+
+		var reply map[string]interface{}
+		err = json.Unmarshal(respBody, &reply)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(reply).To(HaveKey("text"))
+		Expect(len(reply["text"].(string))).To(BeNumerically(">", 20))
 	})
 })
 

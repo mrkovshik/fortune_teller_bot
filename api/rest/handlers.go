@@ -72,7 +72,7 @@ func (s *restAPIServer) MessageReplyHandler(ctx context.Context) func(c *gin.Con
 				return
 			}
 		}
-		c.AbortWithStatus(http.StatusOK)
+		c.JSON(http.StatusOK, reply)
 	}
 }
 
