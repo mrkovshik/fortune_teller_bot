@@ -2,12 +2,16 @@ package local
 
 const (
 	DorianGreyTitle     = "Оскар Уайлд - Портрет Дориана Грея"
-	ThreeOnTheBoatTitle = "Дж. К. Джером - Трое в лодке, не считая собаки"
+	ThreeOnTheBoatTitle = "Дж.К.Джером - Трое в лодке, не считая собаки"
+	GospodaGolovlevy    = "М.Е.Салтыков-Щедрин - Господа Головлёвы"
+	ZolotoyTelenok      = "И.Ильф и Е.Петров - Золотой Телёнок"
 )
 
 var TitleToFileName = map[string]string{
 	DorianGreyTitle:     "1",
 	ThreeOnTheBoatTitle: "2",
+	GospodaGolovlevy:    "3",
+	ZolotoyTelenok:      "4",
 }
 
 var FileNameToTitle = make(map[string]string)
