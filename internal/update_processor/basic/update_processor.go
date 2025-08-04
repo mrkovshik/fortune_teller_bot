@@ -106,7 +106,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	fileName := strings.TrimPrefix(callback.Data, string(model.SelectBook))
 	bookTitle, exist := local.FileNameToTitle[fileName]
 	if !exist {
-		payload["text"] = "Книга с таким названием не найдена"
+		payload["text"] = fmt.Sprintf("Книга с таким именем файла не найдена: %s", fileName)
 		return payload, nil
 	}
 	text, err := cp.bookStorage.GetRandomSentenceFromBook(bookTitle)
