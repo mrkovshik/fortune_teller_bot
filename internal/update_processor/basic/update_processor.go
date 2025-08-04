@@ -45,9 +45,9 @@ func NewUpdateProcessor(bookStorage BookStorage, stateStorage StateStorage, logg
 	}
 }
 
-func (cp *UpdateProcessor) ProcessUpdate(update *model.Update) (map[string]interface{}, error) {
-	chatID := update.Message.Chat.ID
-	command := update.Message.Text
+func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]interface{}, error) {
+	chatID := message.Chat.ID
+	command := message.Text
 	payload := map[string]interface{}{
 		"chat_id": chatID,
 	}
@@ -92,25 +92,28 @@ func (cp *UpdateProcessor) ProcessUpdate(update *model.Update) (map[string]inter
 		payload["text"] = fmt.Sprintf("Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы узнать ответ на ваш вопрос, выберите %s", update_processor.ListBooksCommandName, update_processor.GetMagicCommandName)
 
 	default:
-		switch state.CurrentStep {
-		case model.SelectBook:
-			if update.CallbackQuery == nil {
-				return nil, fmt.Errorf("step %s must have a callback query", state.CurrentStep)
-			}
-			fileName := strings.TrimPrefix(update.CallbackQuery.Data, string(model.SelectBook))
-			bookTitle, exist := local.FileNameToTitle[fileName]
-			if !exist {
-				payload["text"] = "Книга с таким названием не найдена"
-				return payload, nil
-			}
-			text, err := cp.bookStorage.GetRandomSentenceFromBook(bookTitle)
-			if err != nil {
-				return nil, err
-			}
-			payload["text"] = text
-		default:
-			payload["text"] = fmt.Sprintf("Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы узнать ответ на ваш вопрос, выберите %s", update_processor.ListBooksCommandName, update_processor.GetMagicCommandName)
-		}
+		payload["text"] = fmt.Sprintf("Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы узнать ответ на ваш вопрос, выберите %s", update_processor.ListBooksCommandName, update_processor.GetMagicCommandName)
 	}
+
+	return payload, nil
+}
+
+func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[string]interface{}, error) {
+	chatID := callback.From.ID
+	payload := map[string]interface{}{
+		"chat_id": chatID,
+	}
+	fileName := strings.TrimPrefix(callback.Data, string(model.SelectBook))
+	bookTitle, exist := local.FileNameToTitle[fileName]
+	if !exist {
+		payload["text"] = "Книга с таким названием не найдена"
+		return payload, nil
+	}
+	text, err := cp.bookStorage.GetRandomSentenceFromBook(bookTitle)
+	if err != nil {
+		return nil, err
+	}
+	payload["text"] = text
+
 	return payload, nil
 }

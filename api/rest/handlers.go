@@ -20,7 +20,11 @@ const (
 
 func (s *restAPIServer) MessageReplyHandler(ctx context.Context) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		var update model.Update
+		var (
+			reply  map[string]interface{}
+			update model.Update
+			err    error
+		)
 		s.logger.Infof("Got request %s", c.Request.RequestURI)
 		if c.Request.Body == nil {
 			s.logger.Info("Empty body (maybe Telegram ping)")
@@ -35,12 +39,23 @@ func (s *restAPIServer) MessageReplyHandler(ctx context.Context) func(c *gin.Con
 
 		if update.Message != nil {
 			s.logger.Infof("Got message from chatID: %d : %s", update.Message.Chat.ID, update.Message.Text)
+
+			reply, err = s.updateProcessor.ProcessMessage(update.Message)
+			if err != nil {
+				s.logger.Error("ProcessMessage", err)
+				c.AbortWithStatus(http.StatusBadRequest)
+				return
+			}
 		}
-		reply, err := s.updateProcessor.ProcessUpdate(&update)
-		if err != nil {
-			s.logger.Error("ProcessUpdate", err)
-			c.AbortWithStatus(http.StatusBadRequest)
-			return
+
+		if update.CallbackQuery != nil {
+			s.logger.Infof("Got callback from chatID: %d", update.CallbackQuery.From.ID)
+			reply, err = s.updateProcessor.ProcessCallback(update.CallbackQuery)
+			if err != nil {
+				s.logger.Error("ProcessCallback", err)
+				c.AbortWithStatus(http.StatusBadRequest)
+				return
+			}
 		}
 		s.logger.Infof("Sending reply: %s", reply["text"])
 		if err := s.sendMessage(reply); err != nil {
@@ -48,6 +63,7 @@ func (s *restAPIServer) MessageReplyHandler(ctx context.Context) func(c *gin.Con
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
+
 		s.logger.Info("Sending callback answer")
 		if update.CallbackQuery != nil {
 			if err := s.answerCallbackQuery(update.CallbackQuery.ID); err != nil {
