@@ -34,7 +34,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 			From: model.Chat{
 				ID: 132,
 			},
-			Data: "2",
+			Data: "4",
 		})
 		Expect(err).NotTo(HaveOccurred())
 		sentence, ok := reply["text"].(string)
