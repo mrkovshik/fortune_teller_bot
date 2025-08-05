@@ -10,8 +10,8 @@ const (
 )
 
 var TitleToFileName = map[string]string{
-	DorianGreyTitle:     "1.fb2",
-	ThreeOnTheBoatTitle: "2.fb2",
+	DorianGreyTitle:     "2.fb2",
+	ThreeOnTheBoatTitle: "1.fb2",
 	GospodaGolovlevy:    "3.fb2",
 	//ZolotoyTelenok:      "4",
 	DetiKapitanaGranta: "5.epub",
