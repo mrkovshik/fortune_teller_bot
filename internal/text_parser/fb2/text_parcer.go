@@ -49,7 +49,7 @@ func (tp *TextParcer) ParseRandomSentence(data []byte) (string, error) {
 	for _, section := range book.Body.Sections {
 		for _, p := range section.Paragraphs {
 			text := strings.TrimSpace(p.Text)
-			if len(text) > 20 {
+			if len(text) > 20 && !strings.HasSuffix(text, ":") {
 				sentences = append(sentences, text)
 			}
 		}
