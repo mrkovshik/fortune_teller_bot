@@ -30,7 +30,7 @@ type TextParcer struct {
 	logger *zap.SugaredLogger
 }
 
-func NewTextParcer(logger *zap.SugaredLogger) *TextParcer {
+func NewTextParser(logger *zap.SugaredLogger) *TextParcer {
 	return &TextParcer{
 		logger: logger,
 	}

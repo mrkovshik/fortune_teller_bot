@@ -7,14 +7,13 @@ import (
 	"strings"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/embedded"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/book_storage"
+	"github.com/mrkovshik/fortune_teller_bot/internal/text_parser/epub"
 	"github.com/mrkovshik/fortune_teller_bot/internal/text_parser/fb2"
 	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor"
 	"go.uber.org/zap"
 )
 
-type TextParcer interface {
-	ParseRandomSentence(data []byte) (string, error)
-}
 type Storage struct {
 	fs     embed.FS
 	logger *zap.SugaredLogger
@@ -28,7 +27,7 @@ func NewStorage(logger *zap.SugaredLogger) *Storage {
 }
 
 func (s *Storage) GetRandomSentenceFromBook(bookName string) (string, error) {
-	var parser TextParcer
+	var parser book_storage.TextParser
 	fileName, exists := TitleToFileName[bookName]
 	if !exists {
 		return fmt.Sprintf("К сожалению, пока такой книги у нас нет( Пожалуйста, выберите книгу из списка %s", update_processor.ListBooksCommandName), nil
@@ -39,7 +38,9 @@ func (s *Storage) GetRandomSentenceFromBook(bookName string) (string, error) {
 	}
 	switch {
 	case strings.HasSuffix(fileName, ".fb2"):
-		parser = fb2.NewTextParcer(s.logger)
+		parser = fb2.NewTextParser(s.logger)
+	case strings.HasSuffix(fileName, ".epub"):
+		parser = epub.NewTextParser(s.logger)
 	default:
 		return "", fmt.Errorf("unsupported file type: %s", fileName)
 	}
@@ -59,7 +60,7 @@ func (s *Storage) ListBooks() ([]string, error) {
 
 	var bookNames []string
 	for _, entry := range entries {
-		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".fb2") {
+		if !entry.IsDir() {
 			bookTitle, exist := FileNameToTitle[entry.Name()]
 			if !exist {
 				s.logger.Warnw("can't find book title for file. Please add it to 'FileNameToTitle' map or delete the file", "name", entry.Name())
