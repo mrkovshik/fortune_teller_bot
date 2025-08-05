@@ -85,6 +85,9 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 		if err != nil {
 			return nil, err
 		}
+		if len(text) == 0 {
+			text = "Извините, не получилось предсказать будущее по этой книге"
+		}
 		payload["text"] = text
 
 	case update_processor.StartCommandName:

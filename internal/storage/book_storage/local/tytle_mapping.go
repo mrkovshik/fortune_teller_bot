@@ -8,9 +8,9 @@ const (
 )
 
 var TitleToFileName = map[string]string{
-	DorianGreyTitle:     "1",
-	ThreeOnTheBoatTitle: "2",
-	GospodaGolovlevy:    "3",
+	DorianGreyTitle:     "1.fb2",
+	ThreeOnTheBoatTitle: "2.fb2",
+	GospodaGolovlevy:    "3.fb2",
 	//ZolotoyTelenok:      "4",
 }
 

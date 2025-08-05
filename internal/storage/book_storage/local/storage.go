@@ -2,18 +2,19 @@ package local
 
 import (
 	"embed"
-	"encoding/xml"
 	"fmt"
 	"io/fs"
-	"math/rand"
 	"strings"
-	"time"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/embedded"
+	"github.com/mrkovshik/fortune_teller_bot/internal/text_parser/fb2"
 	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor"
 	"go.uber.org/zap"
 )
 
+type TextParcer interface {
+	ParseRandomSentence(data []byte) (string, error)
+}
 type Storage struct {
 	fs     embed.FS
 	logger *zap.SugaredLogger
@@ -26,62 +27,28 @@ func NewStorage(logger *zap.SugaredLogger) *Storage {
 	}
 }
 
-type Paragraph struct {
-	Text string `xml:",chardata"`
-}
-
-type Section struct {
-	Paragraphs []Paragraph `xml:"p"`
-}
-
-type Body struct {
-	Sections []Section `xml:"section"`
-}
-
-type FictionBook struct {
-	Body Body `xml:"body"`
-}
-
 func (s *Storage) GetRandomSentenceFromBook(bookName string) (string, error) {
+	var parser TextParcer
 	fileName, exists := TitleToFileName[bookName]
 	if !exists {
 		return fmt.Sprintf("К сожалению, пока такой книги у нас нет( Пожалуйста, выберите книгу из списка %s", update_processor.ListBooksCommandName), nil
 	}
-	sentences, err := s.LoadBookText(fileName + ".fb2")
+	data, err := s.fs.ReadFile("books/" + fileName)
+	if err != nil {
+		return "", fmt.Errorf("can't read book: %w", err)
+	}
+	switch {
+	case strings.HasSuffix(fileName, ".fb2"):
+		parser = fb2.NewTextParcer(s.logger)
+	default:
+		return "", fmt.Errorf("unsupported file type: %s", fileName)
+	}
+
+	sentence, err := parser.ParseRandomSentence(data)
 	if err != nil {
 		return "", err
 	}
-	rand.New(rand.NewSource(time.Now().UnixNano()))
-	return sentences[rand.Intn(len(sentences))], nil
-}
-
-func (s *Storage) LoadBookText(bookName string) ([]string, error) {
-	bookPath := "books/" + bookName
-	data, err := s.fs.ReadFile(bookPath)
-	if err != nil {
-		return nil, fmt.Errorf("can't read book: %w", err)
-	}
-
-	var book FictionBook
-	if err := xml.Unmarshal(data, &book); err != nil {
-		return nil, fmt.Errorf("can't parse XML: %w", err)
-	}
-
-	var sentences []string
-	for _, section := range book.Body.Sections {
-		for _, p := range section.Paragraphs {
-			text := strings.TrimSpace(p.Text)
-			if len(text) > 20 {
-				sentences = append(sentences, text)
-			}
-		}
-	}
-
-	if len(sentences) == 0 {
-		return nil, fmt.Errorf("no usable paragraphs found")
-	}
-
-	return sentences, nil
+	return sentence, nil
 }
 
 func (s *Storage) ListBooks() ([]string, error) {
@@ -93,7 +60,7 @@ func (s *Storage) ListBooks() ([]string, error) {
 	var bookNames []string
 	for _, entry := range entries {
 		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".fb2") {
-			bookTitle, exist := FileNameToTitle[strings.TrimSuffix(entry.Name(), ".fb2")]
+			bookTitle, exist := FileNameToTitle[entry.Name()]
 			if !exist {
 				s.logger.Warnw("can't find book title for file. Please add it to 'FileNameToTitle' map or delete the file", "name", entry.Name())
 				continue
