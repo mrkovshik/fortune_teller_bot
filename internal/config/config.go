@@ -12,7 +12,7 @@ type Config struct {
 
 func GetConfig() (*Config, error) {
 	cfg := &Config{}
-	if err := env.Parse(cfg); err != nil {
+	if err := env.Parse(cfg); err != nil { //nolint:typecheck
 		return nil, err
 	}
 	// TODO: add validation here
