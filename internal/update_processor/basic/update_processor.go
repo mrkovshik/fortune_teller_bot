@@ -92,7 +92,10 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 
 	case update_processor.StartCommandName:
 		cp.stateStorage.Clear(chatID)
-		payload["text"] = fmt.Sprintf("Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы узнать ответ на ваш вопрос, выберите %s", update_processor.ListBooksCommandName, update_processor.GetMagicCommandName)
+		payload["text"] = fmt.Sprintf("Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы предсказать будущее по случайной книге, выберите %s", update_processor.ListBooksCommandName, update_processor.GetMagicCommandName)
+	case update_processor.HelpCommandName:
+		cp.stateStorage.Clear(chatID)
+		payload["text"] = fmt.Sprintf("Как пользоваться этим ботом?\n Очень просто! Мысленно задайте ему вопрос, например: 'Стоит ли мне ждать повышения на работе?'\n Вселенная даст ответ в виде случайной фразы из выбранной или случайной книги, нужно лишь правильно его интерпретировать) \n Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы предсказать будущее по случайной книге, выберите %s", update_processor.ListBooksCommandName, update_processor.GetMagicCommandName)
 
 	default:
 		payload["text"] = fmt.Sprintf("Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы узнать ответ на ваш вопрос, выберите %s", update_processor.ListBooksCommandName, update_processor.GetMagicCommandName)
