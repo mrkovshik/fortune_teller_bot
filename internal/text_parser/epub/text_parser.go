@@ -53,15 +53,14 @@ func (tp *TextParser) ParseRandomSentence(data []byte) (string, error) {
 	if allText.Len() == 0 {
 		return "", errors.New("no text found in EPUB")
 	}
-
-	sentences := splitIntoSentences(allText.String())
+	cleanText := helpers.CleanHTMLContent(allText.String())
+	sentences := splitIntoSentences(cleanText)
 	if len(sentences) == 0 {
 		return "", errors.New("no sentences found")
 	}
 
-	rand.Seed(time.Now().UnixNano())
-	sentence := strings.TrimSpace(sentences[rand.Intn(len(sentences))])
-	return helpers.RemoveTagsFromString(sentence), nil
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+	return sentences[rand.Intn(len(sentences))], nil
 }
 
 func extractText(n *html.Node, b *strings.Builder) {

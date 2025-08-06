@@ -50,7 +50,8 @@ func (tp *TextParcer) ParseRandomSentence(data []byte) (string, error) {
 	for _, section := range book.Body.Sections {
 		for _, p := range section.Paragraphs {
 			text := strings.TrimSpace(p.Text)
-			if len(text) > 20 && !strings.HasSuffix(text, ":") {
+			cleanText := helpers.CleanHTMLContent(text)
+			if len(cleanText) > 20 && !strings.HasSuffix(text, ":") {
 				sentences = append(sentences, text)
 			}
 		}
@@ -60,6 +61,5 @@ func (tp *TextParcer) ParseRandomSentence(data []byte) (string, error) {
 		return "", fmt.Errorf("no usable paragraphs found")
 	}
 	rand.New(rand.NewSource(time.Now().UnixNano()))
-	sentence := strings.TrimSpace(sentences[rand.Intn(len(sentences))])
-	return helpers.RemoveTagsFromString(sentence), nil
+	return sentences[rand.Intn(len(sentences))], nil
 }
