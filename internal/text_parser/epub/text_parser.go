@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mrkovshik/fortune_teller_bot/internal/text_parser/helpers"
 	"go.uber.org/zap"
 	"golang.org/x/net/html"
 )
@@ -59,7 +60,8 @@ func (tp *TextParser) ParseRandomSentence(data []byte) (string, error) {
 	}
 
 	rand.Seed(time.Now().UnixNano())
-	return strings.TrimSpace(sentences[rand.Intn(len(sentences))]), nil
+	sentence := strings.TrimSpace(sentences[rand.Intn(len(sentences))])
+	return helpers.RemoveTagsFromString(sentence), nil
 }
 
 func extractText(n *html.Node, b *strings.Builder) {
@@ -73,15 +75,14 @@ func extractText(n *html.Node, b *strings.Builder) {
 }
 
 func splitIntoSentences(text string) []string {
-	raw := strings.FieldsFunc(text, func(r rune) bool {
-		return r == '.' || r == '!' || r == '?'
-	})
 
+	text = strings.ReplaceAll(text, "\n", " ")
+	parts := strings.Split(text, ".")
 	var sentences []string
-	for _, s := range raw {
+	for _, s := range parts {
 		s = strings.TrimSpace(s)
 		if len(s) > 20 {
-			sentences = append(sentences, s)
+			sentences = append(sentences, s+".")
 		}
 	}
 	return sentences
