@@ -3,7 +3,7 @@ package local_test
 import (
 	"time"
 
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/book_storage/local"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"go.uber.org/zap"

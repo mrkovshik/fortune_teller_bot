@@ -7,8 +7,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/mrkovshik/fortune_teller_bot/api/rest"
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/book_storage/local"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/state_storage/in_memory"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/state_storage/inmemory"
 	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor/basic"
 	"go.uber.org/zap"
 )

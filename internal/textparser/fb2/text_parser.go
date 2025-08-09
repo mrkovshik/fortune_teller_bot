@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/mrkovshik/fortune_teller_bot/internal/text_parser/helpers"
+	"github.com/mrkovshik/fortune_teller_bot/internal/textparser/helpers"
 	"go.uber.org/zap"
 )
 

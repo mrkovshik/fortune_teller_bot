@@ -1,7 +1,7 @@
 package helpers_test
 
 import (
-	"github.com/mrkovshik/fortune_teller_bot/internal/text_parser/helpers"
+	"github.com/mrkovshik/fortune_teller_bot/internal/textparser/helpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/book_storage/local"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
 	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor"
 	"go.uber.org/zap"
 )

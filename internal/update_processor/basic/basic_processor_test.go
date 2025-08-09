@@ -2,8 +2,8 @@ package basic_test
 
 import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/book_storage/local"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/state_storage/in_memory"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/state_storage/inmemory"
 	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor/basic"
 
 	. "github.com/onsi/ginkgo/v2"

@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/embedded"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/book_storage"
-	"github.com/mrkovshik/fortune_teller_bot/internal/text_parser/epub"
-	"github.com/mrkovshik/fortune_teller_bot/internal/text_parser/fb2"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage"
+	"github.com/mrkovshik/fortune_teller_bot/internal/textparser/epub"
+	"github.com/mrkovshik/fortune_teller_bot/internal/textparser/fb2"
 	"go.uber.org/zap"
 )
 
