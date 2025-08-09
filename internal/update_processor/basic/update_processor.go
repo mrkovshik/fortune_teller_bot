@@ -176,6 +176,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			state.StepStack = model.NewStepStack()
 			state.StepStack.Push(model.SelectStartCommand)
 			cp.stateStorage.Update(chatID, state)
+			payload["text"] = "Возвращаемся назад"
 			payload["reply_markup"] = startMenu
 		default:
 			payload["text"] = "Так оно не работает. Попробуйте начать заново, нажав /start"
@@ -206,6 +207,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			state.StepStack = model.NewStepStack()
 			state.StepStack.Push(model.SelectStartCommand)
 			cp.stateStorage.Update(chatID, state)
+			payload["text"] = "Возвращаемся назад"
 			payload["reply_markup"] = startMenu
 		default:
 			payload["text"] = "Так оно не работает. Попробуйте начать заново, нажав /start"
