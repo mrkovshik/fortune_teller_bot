@@ -10,17 +10,17 @@ func NewStateStorage() StateStorage { // TODO: добавить очистку �
 	return make(StateStorage)
 }
 
-func (s StateStorage) Update(chatID int64, state model.ChatState) {
-	s[chatID] = state
+func (s StateStorage) Update(chatID int64, state *model.ChatState) {
+	s[chatID] = *state
 }
 
-func (s StateStorage) Get(chatID int64) (model.ChatState, error) {
+func (s StateStorage) Get(chatID int64) (*model.ChatState, error) {
 	state, _ := s[chatID]
-	return state, nil
+	return &state, nil
 }
 
-func (s StateStorage) Add(chatID int64, state model.ChatState) {
-	s[chatID] = state
+func (s StateStorage) Add(chatID int64, state *model.ChatState) {
+	s[chatID] = *state
 }
 
 func (s StateStorage) Clear(chatID int64) {

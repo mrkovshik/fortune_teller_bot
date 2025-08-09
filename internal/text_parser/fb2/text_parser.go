@@ -37,7 +37,7 @@ func NewTextParser(logger *zap.SugaredLogger) *TextParcer {
 	}
 }
 
-func (tp *TextParcer) ParseRandomSentence(data []byte) (string, error) {
+func (tp *TextParcer) ParseRandomSentence(data []byte, seed int64) (string, error) {
 	if len(data) == 0 {
 		return "", errors.New("empty data")
 	}

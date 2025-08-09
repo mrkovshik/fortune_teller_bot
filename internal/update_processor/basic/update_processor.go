@@ -3,41 +3,22 @@ package basic
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
+
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/book_storage/local"
 	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor"
 	"go.uber.org/zap"
 )
 
-type InlineKeyboardButton struct {
-	Text         string `json:"text"`
-	CallbackData string `json:"callback_data"`
-}
-
-type InlineKeyboardMarkup struct {
-	InlineKeyboard [][]InlineKeyboardButton `json:"inline_keyboard"`
-}
-
-type BookStorage interface {
-	GetRandomSentenceFromBook(bookName string) (string, error)
-	ListBooks() ([]string, error)
-}
-
-type StateStorage interface {
-	Update(chatID int64, state model.ChatState)
-	Get(chatID int64) (model.ChatState, error)
-	Add(chatID int64, state model.ChatState)
-	Clear(chatID int64)
-}
-
 type UpdateProcessor struct {
 	logger       *zap.SugaredLogger
-	bookStorage  BookStorage
-	stateStorage StateStorage
+	bookStorage  update_processor.BookStorage
+	stateStorage update_processor.StateStorage
 }
 
-func NewUpdateProcessor(bookStorage BookStorage, stateStorage StateStorage, logger *zap.SugaredLogger) *UpdateProcessor {
+func NewUpdateProcessor(bookStorage update_processor.BookStorage, stateStorage update_processor.StateStorage, logger *zap.SugaredLogger) *UpdateProcessor {
 	return &UpdateProcessor{
 		logger:       logger,
 		bookStorage:  bookStorage,
@@ -51,56 +32,34 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 	payload := map[string]interface{}{
 		"chat_id": chatID,
 	}
-
 	state, err := cp.stateStorage.Get(chatID)
 	if err != nil {
 		return nil, err
 	}
-	switch command {
-	case update_processor.ListBooksCommandName:
-		books, err := cp.bookStorage.ListBooks()
-		if err != nil {
-			return nil, fmt.Errorf(`failed to list books: %w`, err)
-		}
-		var keyboard [][]InlineKeyboardButton
-		for _, book := range books {
-			button := InlineKeyboardButton{
-				Text:         book,
-				CallbackData: fmt.Sprintf("%s:%s", model.SelectBook, local.TitleToFileName[book]),
-			}
-			// одна кнопка в строке
-			keyboard = append(keyboard, []InlineKeyboardButton{button})
-		}
-		payload["text"] = "Выберите книгу, по которой будем предсказывать будущее:"
-		payload["reply_markup"] = InlineKeyboardMarkup{
-			InlineKeyboard: keyboard,
-		}
-		cp.logger.Info(keyboard)
-		state.CurrentStep = model.SelectBook
-		cp.stateStorage.Update(chatID, state)
-
-	case update_processor.GetMagicCommandName:
+	currentStep, exist := state.StepStack.Peek()
+	if !exist {
 		cp.stateStorage.Clear(chatID)
-		text, err := cp.bookStorage.GetRandomSentenceFromBook(local.GetRandomBookTitle())
+		return nil, fmt.Errorf("can't find current step")
+	}
+	switch currentStep {
+	case model.AskingQuestion:
+		var seed int64
+		for i := 0; i < len(command); i++ {
+			seed += int64(command[i])
+		}
+		text, err := cp.bookStorage.GetRandomSentenceFromBook(local.GetRandomBookTitle(), seed)
 		if err != nil {
 			return nil, err
 		}
-		if len(text) == 0 {
-			text = "Извините, не получилось предсказать будущее по этой книге"
-		}
 		payload["text"] = text
-
-	case update_processor.StartCommandName:
 		cp.stateStorage.Clear(chatID)
-		payload["text"] = fmt.Sprintf("Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы предсказать будущее по случайной книге, выберите %s", update_processor.ListBooksCommandName, update_processor.GetMagicCommandName)
-	case update_processor.HelpCommandName:
-		cp.stateStorage.Clear(chatID)
-		payload["text"] = fmt.Sprintf("Как пользоваться этим ботом?\n Очень просто! Мысленно задайте ему вопрос, например: 'Стоит ли мне ждать повышения на работе?'\n Вселенная даст ответ в виде случайной фразы из выбранной или случайной книги, нужно лишь правильно его интерпретировать) \n Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы предсказать будущее по случайной книге, выберите %s", update_processor.ListBooksCommandName, update_processor.GetMagicCommandName)
-
 	default:
-		payload["text"] = fmt.Sprintf("Чтобы посмотреть перечень доступных книг, выберите команду %s, а чтобы узнать ответ на ваш вопрос, выберите %s", update_processor.ListBooksCommandName, update_processor.GetMagicCommandName)
+		state.StepStack = model.NewStepStack()
+		state.StepStack.Push(model.SelectStartCommand)
+		cp.stateStorage.Update(chatID, state)
+		payload["text"] = "Что бы вы хотели сделать?"
+		payload["reply_markup"] = startMenu
 	}
-
 	return payload, nil
 }
 
@@ -109,18 +68,102 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	payload := map[string]interface{}{
 		"chat_id": chatID,
 	}
-	fileName := strings.TrimPrefix(callback.Data, string(model.SelectBook))
-	fileName = strings.TrimPrefix(fileName, ":")
-	bookTitle, exist := local.FileNameToTitle[fileName]
-	if !exist {
-		payload["text"] = fmt.Sprintf("Книга с таким именем файла не найдена: %s", fileName)
-		return payload, nil
-	}
-	text, err := cp.bookStorage.GetRandomSentenceFromBook(bookTitle)
+	state, err := cp.stateStorage.Get(chatID)
 	if err != nil {
 		return nil, err
 	}
-	payload["text"] = text
+	if state == nil || state.StepStack == nil {
+		cp.stateStorage.Update(chatID, &model.ChatState{
+			StepStack: model.NewStepStack(),
+		})
+		state, err = cp.stateStorage.Get(chatID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	currentStep, exist := state.StepStack.Peek()
+	if !exist {
+		currentStep = model.SelectStartCommand
+	}
+	switch currentStep {
+	case model.SelectStartCommand:
+		commandName := strings.TrimPrefix(callback.Data, string(currentStep))
+		command := CallbackCommand(strings.TrimPrefix(commandName, ":"))
+		switch command {
+		case ListBooksCommandName:
+			payload["text"] = "Из каких книг вы хотите получить предсказание?"
+			menu, err := cp.generateListBooksMenu()
+			if err != nil {
+				return nil, err
+			}
+			payload["reply_markup"] = menu
+			state.StepStack.Push(model.SelectBook)
+			cp.stateStorage.Update(chatID, state)
+		case GetRandomSentenceCommandName:
+			text, err := cp.bookStorage.GetRandomSentenceFromBook(local.GetRandomBookTitle(), time.Now().UnixNano())
+			if err != nil {
+				return nil, err
+			}
+			if len(text) == 0 {
+				text = "Извините, не получилось предсказать будущее"
+			}
+			payload["text"] = text
+			cp.stateStorage.Clear(chatID)
+		case AskQuestionCommandName:
+			payload["text"] = "Какую книгу вы хотите использовать для получения ответа на ваш вопрос?"
+			payload["reply_markup"] = askQuestionMenu
+			state.StepStack.Push(model.AskingQuestionMenu)
+			cp.stateStorage.Update(chatID, state)
+		default:
+			payload["text"] = "Извините, что-то пошло не так. Попробуйте начать заново, нажав /start"
+			cp.stateStorage.Clear(chatID)
+		}
+	case model.SelectBook:
+		prevStep, exist := state.StepStack.PeekPrevious()
+		if !exist {
+			return nil, err
+		}
+		if prevStep == model.AskingQuestionMenu {
+			payload["text"] = "Напишите вопрос, на который бы хотели получить ответ из книги, и мы используем его, как базу для поиска предсказания"
+			state.StepStack.Push(model.AskingQuestion)
+			cp.stateStorage.Update(chatID, state)
+			break
+		}
+		fileName := strings.TrimPrefix(callback.Data, string(model.SelectBook))
+		fileName = strings.TrimPrefix(fileName, ":")
+		bookTitle, exist := local.FileNameToTitle[fileName]
+		if !exist {
+			payload["text"] = fmt.Sprintf("Книга с таким именем файла не найдена: %s", fileName)
+			break
+		}
+
+		text, err := cp.bookStorage.GetRandomSentenceFromBook(bookTitle, time.Now().UnixNano())
+		if err != nil {
+			return nil, err
+		}
+		payload["text"] = text
+		cp.stateStorage.Clear(chatID)
+
+	case model.AskingQuestion:
+
+	}
 
 	return payload, nil
+}
+
+func (cp *UpdateProcessor) generateListBooksMenu() (*InlineKeyboardMarkup, error) {
+	books, err := cp.bookStorage.ListBooks()
+	var keyboard [][]InlineKeyboardButton
+	if err != nil {
+		return nil, fmt.Errorf(`failed to list books: %w`, err)
+	}
+	for _, book := range books {
+		button := InlineKeyboardButton{
+			Text:         book,
+			CallbackData: CallbackCommand(fmt.Sprintf("%s:%s", model.SelectBook, local.TitleToFileName[book])),
+		}
+		keyboard = append(keyboard, []InlineKeyboardButton{button})
+	}
+	return &InlineKeyboardMarkup{InlineKeyboard: keyboard}, nil
 }

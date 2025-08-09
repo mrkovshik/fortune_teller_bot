@@ -10,7 +10,6 @@ import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/book_storage"
 	"github.com/mrkovshik/fortune_teller_bot/internal/text_parser/epub"
 	"github.com/mrkovshik/fortune_teller_bot/internal/text_parser/fb2"
-	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor"
 	"go.uber.org/zap"
 )
 
@@ -26,11 +25,11 @@ func NewStorage(logger *zap.SugaredLogger) *Storage {
 	}
 }
 
-func (s *Storage) GetRandomSentenceFromBook(bookName string) (string, error) {
+func (s *Storage) GetRandomSentenceFromBook(bookName string, seed int64) (string, error) {
 	var parser book_storage.TextParser
 	fileName, exists := TitleToFileName[bookName]
 	if !exists {
-		return fmt.Sprintf("К сожалению, пока такой книги у нас нет( Пожалуйста, выберите книгу из списка %s", update_processor.ListBooksCommandName), nil
+		return fmt.Sprintf("К сожалению, пока такой книги у нас нет( Пожалуйста, выберите книгу из списка"), nil
 	}
 	data, err := s.fs.ReadFile("books/" + fileName)
 	if err != nil {
@@ -45,7 +44,7 @@ func (s *Storage) GetRandomSentenceFromBook(bookName string) (string, error) {
 		return "", fmt.Errorf("unsupported file type: %s", fileName)
 	}
 
-	sentence, err := parser.ParseRandomSentence(data)
+	sentence, err := parser.ParseRandomSentence(data, seed)
 	if err != nil {
 		return "", err
 	}

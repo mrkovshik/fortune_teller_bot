@@ -1,8 +1,8 @@
 package basic
 
 type InlineKeyboardButton struct {
-	Text         string `json:"text"`
-	CallbackData string `json:"callback_data"`
+	Text         string          `json:"text"`
+	CallbackData CallbackCommand `json:"callback_data"`
 }
 
 type InlineKeyboardMarkup struct {
@@ -16,30 +16,45 @@ var (
 	}
 )
 
+type CallbackCommand string
+
+const (
+	ListBooksCommandName          CallbackCommand = "list_books"
+	GetRandomSentenceCommandName  CallbackCommand = "get_random_sentence"
+	GetSentenceCommandName        CallbackCommand = "random_book_sentence"
+	AskQuestionCommandName        CallbackCommand = "ask_question"
+	ListBooksForAnswerCommandName CallbackCommand = "list_books"
+	HelpCommandName               CallbackCommand = "help"
+)
+
 var (
-	listBooksButton = InlineKeyboardButton{
-		Text:         "Выбрать книгу для гадания",
+	getRandomQuoteButton = InlineKeyboardButton{
+		Text:         "Получить случайную цитату",
 		CallbackData: "list_books",
 	}
+
+	listBooksButton = InlineKeyboardButton{
+		Text:         "Выбрать конкретную книгу",
+		CallbackData: ListBooksCommandName,
+	}
 	getQuoteFromRandomBookButton = InlineKeyboardButton{
-		Text:         "Случайная фраза из случайной книги",
-		CallbackData: "random_sentence",
+		Text:         "Использовать случайную книгу",
+		CallbackData: GetRandomSentenceCommandName,
 	}
 
 	askQuestionButton = InlineKeyboardButton{
 		Text:         "Гадать на конкретный вопрос",
-		CallbackData: "ask_question",
+		CallbackData: AskQuestionCommandName,
 	}
 
 	helpButton = InlineKeyboardButton{
 		Text:         "Что это за бот?",
-		CallbackData: "help",
+		CallbackData: HelpCommandName,
 	}
 
 	startMenu = InlineKeyboardMarkup{
 		InlineKeyboard: [][]InlineKeyboardButton{
-			{listBooksButton},
-			{getQuoteFromRandomBookButton},
+			{getRandomQuoteButton},
 			{askQuestionButton},
 			{helpButton},
 		},
@@ -47,19 +62,10 @@ var (
 )
 
 var (
-	listBooksForAnswerButton = InlineKeyboardButton{
-		Text:         "Выбрать книгу для получения ответа на вопрос",
-		CallbackData: "list_books_for_answer",
-	}
-	getAnswerFromRandomBookButton = InlineKeyboardButton{
-		Text:         "Получить ответ на вопрос из случайной книги",
-		CallbackData: "list_books",
-	}
-
 	askQuestionMenu = InlineKeyboardMarkup{
 		InlineKeyboard: [][]InlineKeyboardButton{
-			{listBooksForAnswerButton},
-			{getAnswerFromRandomBookButton},
+			{listBooksButton},
+			{getQuoteFromRandomBookButton},
 			{goBackButton},
 		},
 	}

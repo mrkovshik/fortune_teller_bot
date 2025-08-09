@@ -15,7 +15,6 @@ import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/book_storage/local"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/state_storage/in_memory"
-	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor"
 	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor/basic"
 	"github.com/mrkovshik/yandex_diploma/api"
 	. "github.com/onsi/ginkgo/v2"
@@ -24,18 +23,25 @@ import (
 )
 
 var (
-	cfg    *config.Config
-	logger *zap.Logger
-	err    error
-	srv    api.Server
+	cfg       *config.Config
+	logger    *zap.Logger
+	err       error
+	srv       api.Server
+	stepStack = model.NewStepStack()
 )
+
+const testChatID = 111
 
 var _ = Describe("MessageReplyHandler", Ordered, func() {
 	BeforeAll(func() {
 		logger, err = zap.NewDevelopment()
 		Expect(err).NotTo(HaveOccurred())
 		testBookStorage := local.NewStorage(logger.Sugar())
-		testStateStorage := in_memory.NewStateStorage()                                     // TODO: use mock
+		testStateStorage := in_memory.NewStateStorage() // TODO: use mock
+		stepStack.Push(model.AskingQuestion)
+		testStateStorage.Update(testChatID, &model.ChatState{
+			StepStack: stepStack,
+		})
 		proc := basic.NewUpdateProcessor(testBookStorage, testStateStorage, logger.Sugar()) // TODO: use mock
 		cfg, err = config.GetConfig()
 		Expect(err).NotTo(HaveOccurred())
@@ -53,9 +59,9 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 		upd := model.Update{
 			Message: &model.Message{
 				Chat: model.Chat{
-					ID: 111,
+					ID: testChatID,
 				},
-				Text: update_processor.GetMagicCommandName,
+				Text: "Some random text",
 			},
 		}
 		body, _ := json.Marshal(upd)
@@ -76,13 +82,15 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 	})
 
 	It("Responds request for specific book quote", func() {
+		stepStack.Push(model.SelectStartCommand)
+		stepStack.Push(model.SelectBook)
 		upd := model.Update{
 			CallbackQuery: &model.CallbackQuery{
 				ID: "321",
 				From: model.Chat{
-					ID: 123,
+					ID: testChatID,
 				},
-				Data: "2",
+				Data: "2.fb2",
 			},
 		}
 		body, _ := json.Marshal(upd)

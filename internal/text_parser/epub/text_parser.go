@@ -6,7 +6,6 @@ import (
 	"errors"
 	"math/rand"
 	"strings"
-	"time"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/text_parser/helpers"
 	"go.uber.org/zap"
@@ -23,7 +22,7 @@ func NewTextParser(logger *zap.SugaredLogger) *TextParser {
 	}
 }
 
-func (tp *TextParser) ParseRandomSentence(data []byte) (string, error) {
+func (tp *TextParser) ParseRandomSentence(data []byte, seed int64) (string, error) {
 	r, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
 		return "", err
@@ -59,7 +58,7 @@ func (tp *TextParser) ParseRandomSentence(data []byte) (string, error) {
 		return "", errors.New("no sentences found")
 	}
 
-	rand.New(rand.NewSource(time.Now().UnixNano()))
+	rand.New(rand.NewSource(seed))
 	return sentences[rand.Intn(len(sentences))], nil
 }
 
