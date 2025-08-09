@@ -37,11 +37,7 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 		logger, err = zap.NewDevelopment()
 		Expect(err).NotTo(HaveOccurred())
 		testBookStorage := local.NewStorage(logger.Sugar())
-		testStateStorage := inmemory.NewStateStorage() // TODO: use mock
-		stepStack.Push(model.AskingQuestion)
-		testStateStorage.Update(testChatID, &model.ChatState{
-			StepStack: stepStack,
-		})
+		testStateStorage := inmemory.NewStateStorage()                                      // TODO: use mock
 		proc := basic.NewUpdateProcessor(testBookStorage, testStateStorage, logger.Sugar()) // TODO: use mock
 		cfg, err = config.GetConfig()
 		Expect(err).NotTo(HaveOccurred())
@@ -55,7 +51,34 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
+	It("Responds start command with menu", func() {
+		upd := model.Update{
+			Message: &model.Message{
+				Chat: model.Chat{
+					ID: testChatID,
+				},
+				Text: "/start",
+			},
+		}
+		body, _ := json.Marshal(upd)
+		url := fmt.Sprintf("http://%s:%s/telegram", cfg.Host, cfg.Port)
+		resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(resp.StatusCode).To(Equal(http.StatusOK))
+		defer resp.Body.Close()
+		respBody, err := io.ReadAll(resp.Body)
+		Expect(err).NotTo(HaveOccurred())
+
+		var reply map[string]interface{}
+		err = json.Unmarshal(respBody, &reply)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(reply).To(HaveKey("text"))
+		Expect(len(reply["text"].(string))).To(BeNumerically(">", 20))
+	})
+
 	It("Responds request for random book quote", func() {
+		stepStack.Push(model.AskingQuestion)
 		upd := model.Update{
 			Message: &model.Message{
 				Chat: model.Chat{

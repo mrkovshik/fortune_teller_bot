@@ -36,9 +36,12 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 		return nil, err
 	}
 	if state == nil || state.StepStack == nil {
+		stepStack := model.NewStepStack()
+		stepStack.Push(model.SelectStartCommand)
 		cp.stateStorage.Update(chatID, &model.ChatState{
-			StepStack: model.NewStepStack(),
+			StepStack: stepStack,
 		})
+
 		state, err = cp.stateStorage.Get(chatID)
 		if err != nil {
 			return nil, err
