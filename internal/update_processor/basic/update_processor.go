@@ -118,8 +118,9 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			state.StepStack.Push(model.GetRandomSentenceMenu)
 			cp.stateStorage.Update(chatID, state)
 
-		case AskQuestionCommandName:
-			payload["text"] = "Какую книгу вы хотите использовать для получения ответа на ваш вопрос?"
+		case HelpCommandName:
+			payload["text"] = "Есть такая народная забава - гадать на книгах. Человек мысленно или вслух задает вопрос, потом говорит случайную страницу и строку, и книга дает ему ответ. " +
+				"Здесь все почти так же) Вы можете задать свой вопрос текстом - тогда бот использует этот текст для генерации случайных чисел, а можете просто получить случайную цитату из выбранной книги."
 			payload["reply_markup"] = selectSourceMenu
 			state.StepStack.Push(model.AskingQuestionMenu)
 			cp.stateStorage.Update(chatID, state)
@@ -164,7 +165,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			payload["reply_markup"] = menu
 			state.StepStack.Push(model.SelectBook)
 			cp.stateStorage.Update(chatID, state)
-		case GetRandomSentenceCommandName:
+		case UseRandomBookCommandName:
 			payload["text"] = "Напишите вопрос, на который бы хотели получить ответ из книги, и мы используем его, как базу для поиска предсказания"
 			state.StepStack.Push(model.AskingQuestion)
 			cp.stateStorage.Update(chatID, state)
@@ -182,7 +183,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			payload["reply_markup"] = menu
 			state.StepStack.Push(model.SelectBook)
 			cp.stateStorage.Update(chatID, state)
-		case GetRandomSentenceCommandName:
+		case UseRandomBookCommandName:
 
 			text, err := cp.bookStorage.GetRandomSentenceFromBook(local.GetRandomBookTitle(), time.Now().UnixNano())
 			if err != nil {
