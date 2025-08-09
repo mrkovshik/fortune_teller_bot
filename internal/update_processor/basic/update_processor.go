@@ -103,29 +103,28 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	case model.SelectStartCommand:
 
 		switch command {
-		case ListBooksCommandName:
-			payload["text"] = "Из каких книг вы хотите получить предсказание?"
-			menu, err := cp.generateListBooksMenu()
-			if err != nil {
-				return nil, err
-			}
-			payload["reply_markup"] = menu
-			state.StepStack.Push(model.SelectBook)
-			cp.stateStorage.Update(chatID, state)
 		case GetRandomSentenceCommandName:
-			payload["text"] = "Какую книгу вы хотите использовать для получения ответа на ваш вопрос?"
+			payload["text"] = "Какую книгу вы хотите использовать для получения случайной цитаты?"
 			payload["reply_markup"] = selectSourceMenu
 			state.StepStack.Push(model.GetRandomSentenceMenu)
+			cp.stateStorage.Update(chatID, state)
+
+		case AskQuestionCommandName:
+			payload["text"] = "Какую книгу вы хотите использовать для получения ответа на ваш вопрос?"
+			payload["reply_markup"] = selectSourceMenu
+			state.StepStack.Push(model.AskingQuestionMenu)
 			cp.stateStorage.Update(chatID, state)
 
 		case HelpCommandName:
 			payload["text"] = "Есть такая народная забава - гадать на книгах. Человек мысленно или вслух задает вопрос, потом говорит случайную страницу и строку, и книга дает ему ответ. " +
 				"Здесь все почти так же) Вы можете задать свой вопрос текстом - тогда бот использует этот текст для генерации случайных чисел, а можете просто получить случайную цитату из выбранной книги."
-			payload["reply_markup"] = selectSourceMenu
-			state.StepStack.Push(model.AskingQuestionMenu)
+			state.StepStack = model.NewStepStack()
+			state.StepStack.Push(model.SelectStartCommand)
 			cp.stateStorage.Update(chatID, state)
+			payload["text"] = "Что бы вы хотели сделать?"
+			payload["reply_markup"] = startMenu
 		default:
-			payload["text"] = "Извините, что-то пошло не так. Попробуйте начать заново, нажав /start"
+			payload["text"] = "Так оно не работает. Попробуйте начать заново, нажав /start"
 			cp.stateStorage.Clear(chatID)
 		}
 	case model.SelectBook:
