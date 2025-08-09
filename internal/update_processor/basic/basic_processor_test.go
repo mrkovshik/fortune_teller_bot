@@ -65,8 +65,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 	})
 
 	It("Takes random sentence from random book", func() {
-		stepStack.Push(model.SelectStartCommand)
-		stepStack.Push(model.SelectBook)
+		stepStack.Push(model.GetRandomSentenceMenu)
 		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
 			ID: "123",
 			From: model.Chat{
