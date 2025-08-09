@@ -35,6 +35,15 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 	if err != nil {
 		return nil, err
 	}
+	if state == nil || state.StepStack == nil {
+		cp.stateStorage.Update(chatID, &model.ChatState{
+			StepStack: model.NewStepStack(),
+		})
+		state, err = cp.stateStorage.Get(chatID)
+		if err != nil {
+			return nil, err
+		}
+	}
 	currentStep, exist := state.StepStack.Peek()
 	if !exist {
 		cp.stateStorage.Clear(chatID)
