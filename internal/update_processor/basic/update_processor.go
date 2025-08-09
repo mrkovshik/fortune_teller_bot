@@ -97,10 +97,11 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	if !exist {
 		currentStep = model.SelectStartCommand
 	}
+	commandName := strings.TrimPrefix(callback.Data, string(currentStep))
+	command := CallbackCommand(strings.TrimPrefix(commandName, ":"))
 	switch currentStep {
 	case model.SelectStartCommand:
-		commandName := strings.TrimPrefix(callback.Data, string(currentStep))
-		command := CallbackCommand(strings.TrimPrefix(commandName, ":"))
+
 		switch command {
 		case ListBooksCommandName:
 			payload["text"] = "Из каких книг вы хотите получить предсказание?"
@@ -112,18 +113,14 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			state.StepStack.Push(model.SelectBook)
 			cp.stateStorage.Update(chatID, state)
 		case GetRandomSentenceCommandName:
-			text, err := cp.bookStorage.GetRandomSentenceFromBook(local.GetRandomBookTitle(), time.Now().UnixNano())
-			if err != nil {
-				return nil, err
-			}
-			if len(text) == 0 {
-				text = "Извините, не получилось предсказать будущее"
-			}
-			payload["text"] = text
-			cp.stateStorage.Clear(chatID)
+			payload["text"] = "Какую книгу вы хотите использовать для получения ответа на ваш вопрос?"
+			payload["reply_markup"] = selectSourceMenu
+			state.StepStack.Push(model.GetRandomSentenceMenu)
+			cp.stateStorage.Update(chatID, state)
+
 		case AskQuestionCommandName:
 			payload["text"] = "Какую книгу вы хотите использовать для получения ответа на ваш вопрос?"
-			payload["reply_markup"] = askQuestionMenu
+			payload["reply_markup"] = selectSourceMenu
 			state.StepStack.Push(model.AskingQuestionMenu)
 			cp.stateStorage.Update(chatID, state)
 		default:
@@ -156,8 +153,49 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 		payload["text"] = text
 		cp.stateStorage.Clear(chatID)
 
-	case model.AskingQuestion:
+	case model.AskingQuestionMenu:
+		switch command {
+		case ListBooksCommandName:
+			payload["text"] = "Из каких книг вы хотите получить предсказание?"
+			menu, err := cp.generateListBooksMenu()
+			if err != nil {
+				return nil, err
+			}
+			payload["reply_markup"] = menu
+			state.StepStack.Push(model.SelectBook)
+			cp.stateStorage.Update(chatID, state)
+		case GetRandomSentenceCommandName:
+			payload["text"] = "Напишите вопрос, на который бы хотели получить ответ из книги, и мы используем его, как базу для поиска предсказания"
+			state.StepStack.Push(model.AskingQuestion)
+			cp.stateStorage.Update(chatID, state)
+		case GoBackCommandName:
 
+		}
+	case model.GetRandomSentenceMenu:
+		switch command {
+		case ListBooksCommandName:
+			payload["text"] = "Из каких книг вы хотите получить предсказание?"
+			menu, err := cp.generateListBooksMenu()
+			if err != nil {
+				return nil, err
+			}
+			payload["reply_markup"] = menu
+			state.StepStack.Push(model.SelectBook)
+			cp.stateStorage.Update(chatID, state)
+		case GetRandomSentenceCommandName:
+
+			text, err := cp.bookStorage.GetRandomSentenceFromBook(local.GetRandomBookTitle(), time.Now().UnixNano())
+			if err != nil {
+				return nil, err
+			}
+			if len(text) == 0 {
+				text = "Извините, не получилось предсказать будущее"
+			}
+			payload["text"] = text
+			cp.stateStorage.Clear(chatID)
+		case GoBackCommandName:
+
+		}
 	}
 
 	return payload, nil

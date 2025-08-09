@@ -19,18 +19,18 @@ var (
 type CallbackCommand string
 
 const (
-	ListBooksCommandName          CallbackCommand = "list_books"
-	GetRandomSentenceCommandName  CallbackCommand = "get_random_sentence"
-	GetSentenceCommandName        CallbackCommand = "random_book_sentence"
-	AskQuestionCommandName        CallbackCommand = "ask_question"
-	ListBooksForAnswerCommandName CallbackCommand = "list_books"
-	HelpCommandName               CallbackCommand = "help"
+	ListBooksCommandName         CallbackCommand = "list_books"
+	GetRandomSentenceCommandName CallbackCommand = "get_random_sentence"
+	UseRandomBookCommandName     CallbackCommand = "use_random_book"
+	AskQuestionCommandName       CallbackCommand = "ask_question"
+	GoBackCommandName            CallbackCommand = "go_back"
+	HelpCommandName              CallbackCommand = "help"
 )
 
 var (
 	getRandomQuoteButton = InlineKeyboardButton{
 		Text:         "Получить случайную цитату",
-		CallbackData: "list_books",
+		CallbackData: GetRandomSentenceCommandName,
 	}
 
 	listBooksButton = InlineKeyboardButton{
@@ -39,7 +39,7 @@ var (
 	}
 	getQuoteFromRandomBookButton = InlineKeyboardButton{
 		Text:         "Использовать случайную книгу",
-		CallbackData: GetRandomSentenceCommandName,
+		CallbackData: UseRandomBookCommandName,
 	}
 
 	askQuestionButton = InlineKeyboardButton{
@@ -62,7 +62,7 @@ var (
 )
 
 var (
-	askQuestionMenu = InlineKeyboardMarkup{
+	selectSourceMenu = InlineKeyboardMarkup{
 		InlineKeyboard: [][]InlineKeyboardButton{
 			{listBooksButton},
 			{getQuoteFromRandomBookButton},
