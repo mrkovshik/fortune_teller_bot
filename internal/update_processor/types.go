@@ -1,4 +1,4 @@
-package update_processor
+package updateprocessor
 
 import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
-	"time"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/text_parser/helpers"
 	"go.uber.org/zap"
@@ -60,6 +59,6 @@ func (tp *TextParcer) ParseRandomSentence(data []byte, seed int64) (string, erro
 	if len(sentences) == 0 {
 		return "", fmt.Errorf("no usable paragraphs found")
 	}
-	rand.New(rand.NewSource(time.Now().UnixNano()))
+	rand.New(rand.NewSource(seed))
 	return sentences[rand.Intn(len(sentences))], nil
 }

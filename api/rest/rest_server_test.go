@@ -37,7 +37,7 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 		logger, err = zap.NewDevelopment()
 		Expect(err).NotTo(HaveOccurred())
 		testBookStorage := local.NewStorage(logger.Sugar())
-		testStateStorage := in_memory.NewStateStorage() // TODO: use mock
+		testStateStorage := inmemory.NewStateStorage() // TODO: use mock
 		stepStack.Push(model.AskingQuestion)
 		testStateStorage.Update(testChatID, &model.ChatState{
 			StepStack: stepStack,

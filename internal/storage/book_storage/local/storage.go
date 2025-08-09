@@ -26,10 +26,10 @@ func NewStorage(logger *zap.SugaredLogger) *Storage {
 }
 
 func (s *Storage) GetRandomSentenceFromBook(bookName string, seed int64) (string, error) {
-	var parser book_storage.TextParser
+	var parser bookstorage.TextParser
 	fileName, exists := TitleToFileName[bookName]
 	if !exists {
-		return fmt.Sprintf("К сожалению, пока такой книги у нас нет( Пожалуйста, выберите книгу из списка"), nil
+		return "К сожалению, пока такой книги у нас нет( Пожалуйста, выберите книгу из списка", nil
 	}
 	data, err := s.fs.ReadFile("books/" + fileName)
 	if err != nil {

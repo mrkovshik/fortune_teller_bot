@@ -13,12 +13,12 @@ import (
 )
 
 const (
-	telegramApiUrl    = "https://api.telegram.org/bot"
-	sendMessageUrl    = "sendMessage"
-	answerCallbackUrl = "answerCallbackQuery"
+	telegramAPIURL    = "https://api.telegram.org/bot"
+	sendMessageURL    = "sendMessage"
+	answerCallbackURL = "answerCallbackQuery"
 )
 
-func (s *restAPIServer) MessageReplyHandler(ctx context.Context) func(c *gin.Context) {
+func (s *restAPIServer) MessageReplyHandler(_ context.Context) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var (
 			reply  map[string]interface{}
@@ -77,7 +77,7 @@ func (s *restAPIServer) MessageReplyHandler(ctx context.Context) func(c *gin.Con
 }
 
 func (s *restAPIServer) sendMessage(payload map[string]interface{}) error {
-	url := fmt.Sprintf("%s%s/%s", telegramApiUrl, s.cfg.Token, sendMessageUrl)
+	url := fmt.Sprintf("%s%s/%s", telegramAPIURL, s.cfg.Token, sendMessageURL)
 	body, _ := json.Marshal(payload)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body)) // TODO: use lib
 	if err != nil {
@@ -94,7 +94,7 @@ func (s *restAPIServer) answerCallbackQuery(callbackID string) error {
 	payload := map[string]interface{}{
 		"callback_query_id": callbackID,
 	}
-	url := fmt.Sprintf("%s%s/%s", telegramApiUrl, s.cfg.Token, answerCallbackUrl)
+	url := fmt.Sprintf("%s%s/%s", telegramAPIURL, s.cfg.Token, answerCallbackURL)
 	body, _ := json.Marshal(payload)
 	_, err := http.Post(url, "application/json", bytes.NewBuffer(body)) // TODO: use lib
 	return err

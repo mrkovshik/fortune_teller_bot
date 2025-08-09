@@ -1,4 +1,4 @@
-package update_processor
+package updateprocessor
 
 const (
 	StartCommandName = "/start"

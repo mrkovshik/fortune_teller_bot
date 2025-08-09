@@ -2,5 +2,5 @@ test:
 	go test ./...  -v  -coverpkg=./... -coverprofile profile.cov
 
 lint:
-	golangci-lint run --config=.golangci.yml
+	golangci-lint run --config=.golangci.yml --fix
 

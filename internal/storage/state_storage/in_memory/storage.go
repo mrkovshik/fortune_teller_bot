@@ -1,4 +1,4 @@
-package in_memory
+package inmemory
 
 import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
@@ -15,7 +15,7 @@ func (s StateStorage) Update(chatID int64, state *model.ChatState) {
 }
 
 func (s StateStorage) Get(chatID int64) (*model.ChatState, error) {
-	state, _ := s[chatID]
+	state := s[chatID]
 	return &state, nil
 }
 

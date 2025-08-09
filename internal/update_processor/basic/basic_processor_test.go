@@ -18,14 +18,14 @@ var _ = Describe("Local bookStorage functions test", func() {
 		logger        *zap.Logger
 		err           error
 		bookStorage   *local.Storage
-		stateStorage  in_memory.StateStorage
+		stateStorage  inmemory.StateStorage
 		testProcessor *basic.UpdateProcessor
 		stepStack     = model.NewStepStack()
 	)
 	BeforeEach(func() {
 		logger, err = zap.NewDevelopment()
 		Expect(err).NotTo(HaveOccurred())
-		stateStorage = in_memory.NewStateStorage() // TODO: use mock
+		stateStorage = inmemory.NewStateStorage() // TODO: use mock
 		stepStack.Push(model.SelectStartCommand)
 		stateStorage.Update(testChatID, &model.ChatState{
 			StepStack: stepStack,

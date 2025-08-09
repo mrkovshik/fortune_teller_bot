@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
-
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/book_storage/local"
 	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor"
 	"go.uber.org/zap"
@@ -14,11 +13,11 @@ import (
 
 type UpdateProcessor struct {
 	logger       *zap.SugaredLogger
-	bookStorage  update_processor.BookStorage
-	stateStorage update_processor.StateStorage
+	bookStorage  updateprocessor.BookStorage
+	stateStorage updateprocessor.StateStorage
 }
 
-func NewUpdateProcessor(bookStorage update_processor.BookStorage, stateStorage update_processor.StateStorage, logger *zap.SugaredLogger) *UpdateProcessor {
+func NewUpdateProcessor(bookStorage updateprocessor.BookStorage, stateStorage updateprocessor.StateStorage, logger *zap.SugaredLogger) *UpdateProcessor {
 	return &UpdateProcessor{
 		logger:       logger,
 		bookStorage:  bookStorage,
