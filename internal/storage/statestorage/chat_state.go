@@ -1,4 +1,4 @@
-package model
+package statestorage
 
 import "container/list"
 
@@ -12,8 +12,15 @@ const (
 
 type ChatState struct {
 	StepStack *StepStack
-	TempData  map[string]string
 }
+
+func NewChatState() *ChatState {
+	stepStack := NewStepStack()
+	return &ChatState{
+		StepStack: stepStack,
+	}
+}
+
 type ChatStep string
 
 // StepStack is a stack data structure implemented using container/list.

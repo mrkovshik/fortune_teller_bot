@@ -2,6 +2,7 @@ package updateprocessor
 
 import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/statestorage"
 )
 
 type UpdateProcessor interface {
@@ -15,8 +16,8 @@ type BookStorage interface {
 }
 
 type StateStorage interface {
-	Update(chatID int64, state *model.ChatState)
-	Get(chatID int64) (*model.ChatState, error)
-	Add(chatID int64, state *model.ChatState)
+	Update(chatID int64, state *statestorage.ChatState)
+	Get(chatID int64) (*statestorage.ChatState, error)
+	Add(chatID int64, state *statestorage.ChatState)
 	Clear(chatID int64)
 }

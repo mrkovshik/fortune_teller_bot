@@ -3,7 +3,8 @@ package basic_test
 import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/state_storage/inmemory"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/statestorage"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/statestorage/inmemory"
 	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor/basic"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -20,14 +21,14 @@ var _ = Describe("Local bookStorage functions test", func() {
 		bookStorage   *local.Storage
 		stateStorage  inmemory.StateStorage
 		testProcessor *basic.UpdateProcessor
-		stepStack     = model.NewStepStack()
+		stepStack     = statestorage.NewStepStack()
 	)
 	BeforeEach(func() {
 		logger, err = zap.NewDevelopment()
 		Expect(err).NotTo(HaveOccurred())
 		stateStorage = inmemory.NewStateStorage() // TODO: use mock
-		stepStack.Push(model.SelectStartCommand)
-		stateStorage.Update(testChatID, &model.ChatState{
+		stepStack.Push(statestorage.SelectStartCommand)
+		stateStorage.Update(testChatID, &statestorage.ChatState{
 			StepStack: stepStack,
 		})
 		bookStorage = local.NewStorage(logger.Sugar()) // TODO: use mock
@@ -35,7 +36,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 	})
 
 	It("Get random sentence from specific book", func() {
-		stepStack.Push(model.SelectBook)
+		stepStack.Push(statestorage.SelectBook)
 		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
 			ID: "123",
 			From: model.Chat{
@@ -50,8 +51,8 @@ var _ = Describe("Local bookStorage functions test", func() {
 	})
 
 	It("Takes answer from specific book", func() {
-		stepStack.Push(model.SelectBook)
-		stepStack.Push(model.AskingQuestion)
+		stepStack.Push(statestorage.SelectBook)
+		stepStack.Push(statestorage.AskingQuestion)
 		reply, err := testProcessor.ProcessMessage(&model.Message{
 			Chat: model.Chat{
 				ID: testChatID,
@@ -65,7 +66,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 	})
 
 	It("Takes random sentence from random book", func() {
-		stepStack.Push(model.GetRandomSentenceMenu)
+		stepStack.Push(statestorage.GetRandomSentenceMenu)
 		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
 			ID: "123",
 			From: model.Chat{
@@ -77,7 +78,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 		sentence, ok := reply["text"].(string)
 		Expect(ok).To(BeTrue())
 		Expect(sentence).To(ContainSubstring("Из каких книг вы хотите получить предсказание?"))
-		keyBoard, ok := reply["reply_markup"].(*basic.InlineKeyboardMarkup)
+		keyBoard, ok := reply["reply_markup"].(basic.InlineKeyboardMarkup)
 		Expect(ok).To(BeTrue())
 		Expect(len(keyBoard.InlineKeyboard)).To(BeNumerically(">", 1))
 	})

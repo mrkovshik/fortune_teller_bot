@@ -7,6 +7,7 @@ import (
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/statestorage"
 	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor"
 	"go.uber.org/zap"
 )
@@ -35,25 +36,19 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 	if err != nil {
 		return nil, err
 	}
-	if state == nil || state.StepStack == nil {
-		stepStack := model.NewStepStack()
-		stepStack.Push(model.SelectStartCommand)
-		cp.stateStorage.Update(chatID, &model.ChatState{
-			StepStack: stepStack,
-		})
-
-		state, err = cp.stateStorage.Get(chatID)
-		if err != nil {
-			return nil, err
-		}
+	if state == nil {
+		state = statestorage.NewChatState()
+		cp.stateStorage.Add(chatID, state)
 	}
+
 	currentStep, exist := state.StepStack.Peek()
 	if !exist {
-		cp.stateStorage.Clear(chatID)
-		return nil, fmt.Errorf("can't find current step")
+		currentStep = statestorage.SelectStartCommand
+		state.StepStack.Push(currentStep)
 	}
+
 	switch currentStep {
-	case model.AskingQuestion:
+	case statestorage.AskingQuestion:
 		var seed int64
 		for i := 0; i < len(command); i++ {
 			seed += int64(command[i])
@@ -63,11 +58,11 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 			return nil, err
 		}
 		payload["text"] = text
-		cp.stateStorage.Clear(chatID)
-	default:
-		state.StepStack = model.NewStepStack()
-		state.StepStack.Push(model.SelectStartCommand)
+		state.StepStack = statestorage.NewStepStack()
+		state.StepStack.Push(statestorage.SelectStartCommand)
 		cp.stateStorage.Update(chatID, state)
+
+	case statestorage.SelectStartCommand:
 		payload["text"] = "Что бы вы хотели сделать?"
 		payload["reply_markup"] = startMenu
 	}
@@ -83,66 +78,59 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	if err != nil {
 		return nil, err
 	}
-	if state == nil || state.StepStack == nil {
-		cp.stateStorage.Update(chatID, &model.ChatState{
-			StepStack: model.NewStepStack(),
-		})
-		state, err = cp.stateStorage.Get(chatID)
-		if err != nil {
-			return nil, err
-		}
+	if state == nil {
+		state = statestorage.NewChatState()
+		cp.stateStorage.Add(chatID, state)
 	}
 
 	currentStep, exist := state.StepStack.Peek()
 	if !exist {
-		currentStep = model.SelectStartCommand
+		currentStep = statestorage.SelectStartCommand
+		state.StepStack.Push(currentStep)
 	}
 	commandName := strings.TrimPrefix(callback.Data, string(currentStep))
 	command := CallbackCommand(strings.TrimPrefix(commandName, ":"))
 	switch currentStep {
-	case model.SelectStartCommand:
+	case statestorage.SelectStartCommand:
 
 		switch command {
 		case GetRandomSentenceCommandName:
 			payload["text"] = "Какую книгу вы хотите использовать для получения случайной цитаты?"
 			payload["reply_markup"] = selectSourceMenu
-			state.StepStack.Push(model.GetRandomSentenceMenu)
+			state.StepStack.Push(statestorage.GetRandomSentenceMenu)
 			cp.stateStorage.Update(chatID, state)
 
 		case AskQuestionCommandName:
 			payload["text"] = "Какую книгу вы хотите использовать для получения ответа на ваш вопрос?"
 			payload["reply_markup"] = selectSourceMenu
-			state.StepStack.Push(model.AskingQuestionMenu)
+			state.StepStack.Push(statestorage.AskingQuestionMenu)
 			cp.stateStorage.Update(chatID, state)
 
 		case HelpCommandName:
 			payload["text"] = "Есть такая народная забава - гадать на книгах. Человек мысленно или вслух задает вопрос, потом говорит случайную страницу и строку, и книга дает ему ответ. " +
 				"Здесь все почти так же) Вы можете задать свой вопрос текстом - тогда бот использует этот текст для генерации случайных чисел, а можете просто получить случайную цитату из выбранной книги.\n\n" +
 				"Что бы вы хотели сделать?"
-			state.StepStack = model.NewStepStack()
-			state.StepStack.Push(model.SelectStartCommand)
+			state.StepStack = statestorage.NewStepStack()
+			state.StepStack.Push(statestorage.SelectStartCommand)
 			cp.stateStorage.Update(chatID, state)
 			payload["reply_markup"] = startMenu
 		default:
-			payload["text"] = "Так оно не работает. Попробуйте начать заново, нажав /start"
-			cp.stateStorage.Clear(chatID)
+			payload["text"] = "Так оно не работает. Используйте последнее меню или начните заново, нажав /start"
 		}
-	case model.SelectBook:
+	case statestorage.SelectBook:
 		prevStep, exist := state.StepStack.PeekPrevious()
 		if !exist {
 			return nil, err
 		}
 		switch prevStep {
-		case model.AskingQuestionMenu:
+		case statestorage.AskingQuestionMenu:
 			payload["text"] = "Напишите вопрос, на который бы хотели получить ответ из книги, и мы используем его, как базу для поиска предсказания"
-			state.StepStack.Push(model.AskingQuestion)
+			state.StepStack.Push(statestorage.AskingQuestion)
 			cp.stateStorage.Update(chatID, state)
-		case model.GetRandomSentenceMenu:
-			fileName := strings.TrimPrefix(callback.Data, string(model.SelectBook))
-			fileName = strings.TrimPrefix(fileName, ":")
-			bookTitle, exist := local.FileNameToTitle[fileName]
+		case statestorage.GetRandomSentenceMenu:
+			bookTitle, exist := local.FileNameToTitle[callback.Data]
 			if !exist {
-				payload["text"] = fmt.Sprintf("Книга с таким именем файла не найдена: %s", fileName)
+				payload["text"] = fmt.Sprintf("Книга с таким именем файла не найдена: %s", callback.Data)
 				break
 			}
 
@@ -151,47 +139,43 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 				return nil, err
 			}
 			payload["text"] = text
-			cp.stateStorage.Clear(chatID)
+			state.StepStack = statestorage.NewStepStack()
+			state.StepStack.Push(statestorage.SelectStartCommand)
+			cp.stateStorage.Update(chatID, state)
 		default:
-			payload["text"] = "Так оно не работает. Попробуйте начать заново, нажав /start"
-			cp.stateStorage.Clear(chatID)
+			payload["text"] = "Так оно не работает. Используйте последнее меню или начните заново, нажав /start"
 		}
 
-	case model.AskingQuestionMenu:
+	case statestorage.AskingQuestionMenu:
 		switch command {
 		case ListBooksCommandName:
-			payload["text"] = "Из каких книг вы хотите получить предсказание?"
-			menu, err := cp.generateListBooksMenu()
+			payload, err = cp.generateListBooksMenuPayload()
 			if err != nil {
 				return nil, err
 			}
-			payload["reply_markup"] = menu
-			state.StepStack.Push(model.SelectBook)
+			state.StepStack.Push(statestorage.SelectBook)
 			cp.stateStorage.Update(chatID, state)
 		case UseRandomBookCommandName:
 			payload["text"] = "Напишите вопрос, на который бы хотели получить ответ из книги, и мы используем его, как базу для поиска предсказания"
-			state.StepStack.Push(model.AskingQuestion)
+			state.StepStack.Push(statestorage.AskingQuestion)
 			cp.stateStorage.Update(chatID, state)
 		case GoBackCommandName:
-			state.StepStack = model.NewStepStack()
-			state.StepStack.Push(model.SelectStartCommand)
+			state.StepStack = statestorage.NewStepStack()
+			state.StepStack.Push(statestorage.SelectStartCommand)
 			cp.stateStorage.Update(chatID, state)
 			payload["text"] = "Возвращаемся назад"
 			payload["reply_markup"] = startMenu
 		default:
-			payload["text"] = "Так оно не работает. Попробуйте начать заново, нажав /start"
-			cp.stateStorage.Clear(chatID)
+			payload["text"] = "Так оно не работает. Используйте последнее меню или начните заново, нажав /start"
 		}
-	case model.GetRandomSentenceMenu:
+	case statestorage.GetRandomSentenceMenu:
 		switch command {
 		case ListBooksCommandName:
-			payload["text"] = "Из каких книг вы хотите получить предсказание?"
-			menu, err := cp.generateListBooksMenu()
+			payload, err = cp.generateListBooksMenuPayload()
 			if err != nil {
 				return nil, err
 			}
-			payload["reply_markup"] = menu
-			state.StepStack.Push(model.SelectBook)
+			state.StepStack.Push(statestorage.SelectBook)
 			cp.stateStorage.Update(chatID, state)
 		case UseRandomBookCommandName:
 			text, err := cp.bookStorage.GetRandomSentenceFromBook(local.GetRandomBookTitle(), time.Now().UnixNano())
@@ -204,21 +188,20 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			payload["text"] = text
 			cp.stateStorage.Clear(chatID)
 		case GoBackCommandName:
-			state.StepStack = model.NewStepStack()
-			state.StepStack.Push(model.SelectStartCommand)
+			state.StepStack = statestorage.NewStepStack()
+			state.StepStack.Push(statestorage.SelectStartCommand)
 			cp.stateStorage.Update(chatID, state)
 			payload["text"] = "Возвращаемся назад"
 			payload["reply_markup"] = startMenu
 		default:
-			payload["text"] = "Так оно не работает. Попробуйте начать заново, нажав /start"
-			cp.stateStorage.Clear(chatID)
+			payload["text"] = "Так оно не работает. Используйте последнее меню или начните заново, нажав /start"
 		}
 	}
 
 	return payload, nil
 }
 
-func (cp *UpdateProcessor) generateListBooksMenu() (*InlineKeyboardMarkup, error) {
+func (cp *UpdateProcessor) generateListBooksMenuPayload() (map[string]interface{}, error) {
 	books, err := cp.bookStorage.ListBooks()
 	var keyboard [][]InlineKeyboardButton
 	if err != nil {
@@ -227,9 +210,13 @@ func (cp *UpdateProcessor) generateListBooksMenu() (*InlineKeyboardMarkup, error
 	for _, book := range books {
 		button := InlineKeyboardButton{
 			Text:         book,
-			CallbackData: CallbackCommand(fmt.Sprintf("%s:%s", model.SelectBook, local.TitleToFileName[book])),
+			CallbackData: CallbackCommand(local.TitleToFileName[book]),
 		}
 		keyboard = append(keyboard, []InlineKeyboardButton{button})
 	}
-	return &InlineKeyboardMarkup{InlineKeyboard: keyboard}, nil
+	payload := map[string]interface{}{
+		"text":         "Из каких книг вы хотите получить предсказание?",
+		"reply_markup": InlineKeyboardMarkup{InlineKeyboard: keyboard},
+	}
+	return payload, nil
 }

@@ -14,7 +14,8 @@ import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/state_storage/inmemory"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/statestorage"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/statestorage/inmemory"
 	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor/basic"
 	"github.com/mrkovshik/yandex_diploma/api"
 	. "github.com/onsi/ginkgo/v2"
@@ -27,7 +28,7 @@ var (
 	logger    *zap.Logger
 	err       error
 	srv       api.Server
-	stepStack = model.NewStepStack()
+	stepStack = statestorage.NewStepStack()
 )
 
 const testChatID = 111
@@ -78,7 +79,7 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 	})
 
 	It("Responds request for random book quote", func() {
-		stepStack.Push(model.AskingQuestion)
+		stepStack.Push(statestorage.AskingQuestion)
 		upd := model.Update{
 			Message: &model.Message{
 				Chat: model.Chat{
@@ -105,8 +106,8 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 	})
 
 	It("Responds request for specific book quote", func() {
-		stepStack.Push(model.SelectStartCommand)
-		stepStack.Push(model.SelectBook)
+		stepStack.Push(statestorage.SelectStartCommand)
+		stepStack.Push(statestorage.SelectBook)
 		upd := model.Update{
 			CallbackQuery: &model.CallbackQuery{
 				ID: "321",
