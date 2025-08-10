@@ -216,7 +216,7 @@ func (cp *UpdateProcessor) generateListBooksMenuPayload() (map[string]interface{
 	}
 	payload := map[string]interface{}{
 		"text":         "Из каких книг вы хотите получить предсказание?",
-		"reply_markup": InlineKeyboardMarkup{InlineKeyboard: keyboard},
+		"reply_markup": &InlineKeyboardMarkup{InlineKeyboard: keyboard},
 	}
 	return payload, nil
 }
