@@ -149,7 +149,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	case statestorage.AskingQuestionMenu:
 		switch command {
 		case ListBooksCommandName:
-			payload, err = cp.generateListBooksMenuPayload()
+			payload, err = cp.generateListBooksMenuPayload(chatID)
 			if err != nil {
 				return nil, err
 			}
@@ -171,7 +171,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	case statestorage.GetRandomSentenceMenu:
 		switch command {
 		case ListBooksCommandName:
-			payload, err = cp.generateListBooksMenuPayload()
+			payload, err = cp.generateListBooksMenuPayload(chatID)
 			if err != nil {
 				return nil, err
 			}
@@ -201,7 +201,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	return payload, nil
 }
 
-func (cp *UpdateProcessor) generateListBooksMenuPayload() (map[string]interface{}, error) {
+func (cp *UpdateProcessor) generateListBooksMenuPayload(chatID int64) (map[string]interface{}, error) {
 	books, err := cp.bookStorage.ListBooks()
 	var keyboard [][]InlineKeyboardButton
 	if err != nil {
@@ -215,6 +215,7 @@ func (cp *UpdateProcessor) generateListBooksMenuPayload() (map[string]interface{
 		keyboard = append(keyboard, []InlineKeyboardButton{button})
 	}
 	payload := map[string]interface{}{
+		"chat_id":      chatID,
 		"text":         "Из каких книг вы хотите получить предсказание?",
 		"reply_markup": &InlineKeyboardMarkup{InlineKeyboard: keyboard},
 	}
