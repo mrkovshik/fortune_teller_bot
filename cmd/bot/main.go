@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/mrkovshik/fortune_teller_bot/api/rest"
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
+	"github.com/mrkovshik/fortune_teller_bot/internal/poker"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/statestorage/inmemory"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor/basic"
@@ -34,5 +36,11 @@ func main() {
 	stateStorage := inmemory.NewStateStorage()
 	commandProcessor := basic.NewUpdateProcessor(bookStorage, stateStorage, sugaredLogger)
 	server := rest.NewRestAPIServer(commandProcessor, cfg, sugaredLogger)
+	pokeTicker := time.NewTicker(time.Duration(cfg.PokingInterval) * time.Second)
+	defer pokeTicker.Stop()
+	urlPokerStopChanel := make(chan struct{})
+	urlPoker := poker.NewPoker(sugaredLogger, cfg.PokingURL)
+	go urlPoker.Poke(pokeTicker.C, urlPokerStopChanel)
 	sugaredLogger.Fatal(server.RunServer(context.TODO()))
+	<-urlPokerStopChanel
 }

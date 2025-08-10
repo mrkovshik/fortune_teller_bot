@@ -78,7 +78,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 		sentence, ok := reply["text"].(string)
 		Expect(ok).To(BeTrue())
 		Expect(sentence).To(ContainSubstring("Из каких книг вы хотите получить предсказание?"))
-		keyBoard, ok := reply["reply_markup"].(basic.InlineKeyboardMarkup)
+		keyBoard, ok := reply["reply_markup"].(*basic.InlineKeyboardMarkup)
 		Expect(ok).To(BeTrue())
 		Expect(len(keyBoard.InlineKeyboard)).To(BeNumerically(">", 1))
 	})
