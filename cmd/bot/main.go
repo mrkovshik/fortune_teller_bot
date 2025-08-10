@@ -9,7 +9,7 @@ import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/statestorage/inmemory"
-	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor/basic"
+	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor/basic"
 	"go.uber.org/zap"
 )
 

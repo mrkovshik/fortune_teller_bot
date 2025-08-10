@@ -16,7 +16,7 @@ import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/statestorage"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/statestorage/inmemory"
-	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor/basic"
+	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor/basic"
 	"github.com/mrkovshik/yandex_diploma/api"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

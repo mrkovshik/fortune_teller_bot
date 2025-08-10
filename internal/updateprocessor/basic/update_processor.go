@@ -8,7 +8,7 @@ import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/statestorage"
-	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor"
+	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
 	"go.uber.org/zap"
 )
 

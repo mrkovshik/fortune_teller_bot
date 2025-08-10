@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
-	"github.com/mrkovshik/fortune_teller_bot/internal/update_processor"
+	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
 	"github.com/mrkovshik/yandex_diploma/api"
 	"go.uber.org/zap"
 )
