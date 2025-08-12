@@ -7,6 +7,8 @@ const (
 	ZolotoyTelenok      = "И.Ильф и Е.Петров - Золотой Телёнок"
 	DetiKapitanaGranta  = "Ж.Верн - Дети капитана Гранта"
 	ZovKtulchu          = "Г.Лавкрафт - Зов Ктулху"
+	HarmsDlyaDetey      = "Д.Хармс - Сборник для детей"
+	ZoshenkoBest        = "М.Зощенко - Избранное"
 )
 
 var TitleToFileName = map[string]string{
@@ -16,6 +18,8 @@ var TitleToFileName = map[string]string{
 	//ZolotoyTelenok:      "4",
 	DetiKapitanaGranta: "5.epub",
 	ZovKtulchu:         "6.epub",
+	HarmsDlyaDetey:     "7.epub",
+	ZoshenkoBest:       "8.epub",
 }
 
 var FileNameToTitle = make(map[string]string)
