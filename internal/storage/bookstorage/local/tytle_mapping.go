@@ -4,10 +4,8 @@ const (
 	DorianGreyTitle     = "Оскар Уайлд - Портрет Дориана Грея"
 	ThreeOnTheBoatTitle = "Дж.К.Джером - Трое в лодке, не считая собаки"
 	GospodaGolovlevy    = "М.Е.Салтыков-Щедрин - Господа Головлёвы"
-	ZolotoyTelenok      = "И.Ильф и Е.Петров - Золотой Телёнок"
 	DetiKapitanaGranta  = "Ж.Верн - Дети капитана Гранта"
 	ZovKtulchu          = "Г.Лавкрафт - Зов Ктулху"
-	HarmsDlyaDetey      = "Д.Хармс - Сборник для детей"
 	ZoshenkoBest        = "М.Зощенко - Избранное"
 )
 
@@ -15,11 +13,9 @@ var TitleToFileName = map[string]string{
 	DorianGreyTitle:     "2.fb2",
 	ThreeOnTheBoatTitle: "1.fb2",
 	GospodaGolovlevy:    "3.fb2",
-	//ZolotoyTelenok:      "4",
-	DetiKapitanaGranta: "5.epub",
-	ZovKtulchu:         "6.epub",
-	HarmsDlyaDetey:     "7.epub",
-	ZoshenkoBest:       "8.epub",
+	DetiKapitanaGranta:  "5.epub",
+	ZovKtulchu:          "6.epub",
+	ZoshenkoBest:        "8.epub",
 }
 
 var FileNameToTitle = make(map[string]string)
