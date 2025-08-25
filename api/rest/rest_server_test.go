@@ -10,13 +10,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/mrkovshik/fortune_teller_bot/api/rest"
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/statestorage"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/statestorage/inmemory"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor/basic"
+	mock "github.com/mrkovshik/fortune_teller_bot/mocks"
+
 	"github.com/mrkovshik/yandex_diploma/api"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -24,25 +24,25 @@ import (
 )
 
 var (
-	cfg       *config.Config
-	logger    *zap.Logger
-	err       error
-	srv       api.Server
-	stepStack = statestorage.NewStepStack()
+	cfg             *config.Config
+	logger          *zap.Logger
+	err             error
+	srv             api.Server
+	ctrl            *gomock.Controller
+	updateProcessor *mock.MockUpdateProcessor
 )
 
 const testChatID = 111
 
 var _ = Describe("MessageReplyHandler", Ordered, func() {
 	BeforeAll(func() {
+		ctrl = gomock.NewController(GinkgoT())
 		logger, err = zap.NewDevelopment()
 		Expect(err).NotTo(HaveOccurred())
-		testBookStorage := local.NewStorage(logger.Sugar())
-		testStateStorage := inmemory.NewStateStorage()                                      // TODO: use mock
-		proc := basic.NewUpdateProcessor(testBookStorage, testStateStorage, logger.Sugar()) // TODO: use mock
+		updateProcessor = mock.NewMockUpdateProcessor(ctrl)
 		cfg, err = config.GetConfig()
 		Expect(err).NotTo(HaveOccurred())
-		srv = rest.NewRestAPIServer(proc, cfg, logger.Sugar())
+		srv = rest.NewRestAPIServer(updateProcessor, cfg, logger.Sugar())
 		ctx := context.Background()
 		go func() {
 			err := srv.RunServer(ctx)
@@ -51,8 +51,12 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 		err := waitForServer(fmt.Sprintf("%s:%s", cfg.Host, cfg.Port), 3*time.Second)
 		Expect(err).NotTo(HaveOccurred())
 	})
+	AfterAll(func() {
+		DeferCleanup(ctrl.Finish)
+	})
 
 	It("Responds start command with menu", func() {
+
 		upd := model.Update{
 			Message: &model.Message{
 				Chat: model.Chat{
@@ -61,6 +65,12 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 				Text: "/start",
 			},
 		}
+		payload := map[string]interface{}{
+			"chat_id":      testChatID,
+			"text":         "Что бы вы хотели сделать?",
+			"reply_markup": basic.StartMenu,
+		}
+		updateProcessor.EXPECT().ProcessMessage(upd.Message).Return(payload, nil)
 		body, _ := json.Marshal(upd)
 		url := fmt.Sprintf("http://%s:%s/telegram", cfg.Host, cfg.Port)
 		resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
@@ -75,11 +85,10 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(reply).To(HaveKey("text"))
-		Expect(len(reply["text"].(string))).To(BeNumerically(">", 20))
+		Expect(reply["text"].(string)).To(Equal("Что бы вы хотели сделать?"))
 	})
 
 	It("Responds request for random book quote", func() {
-		stepStack.Push(statestorage.AskingQuestion)
 		upd := model.Update{
 			Message: &model.Message{
 				Chat: model.Chat{
@@ -88,6 +97,11 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 				Text: "Some random text",
 			},
 		}
+		payload := map[string]interface{}{
+			"chat_id": testChatID,
+			"text":    "Some random quote",
+		}
+		updateProcessor.EXPECT().ProcessMessage(upd.Message).Return(payload, nil)
 		body, _ := json.Marshal(upd)
 		url := fmt.Sprintf("http://%s:%s/telegram", cfg.Host, cfg.Port)
 		resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
@@ -102,12 +116,10 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(reply).To(HaveKey("text"))
-		Expect(len(reply["text"].(string))).To(BeNumerically(">", 20))
+		Expect(reply["text"].(string)).To(Equal("Some random quote"))
 	})
 
 	It("Responds request for specific book quote", func() {
-		stepStack.Push(statestorage.SelectStartCommand)
-		stepStack.Push(statestorage.SelectBook)
 		upd := model.Update{
 			CallbackQuery: &model.CallbackQuery{
 				ID: "321",
@@ -117,6 +129,11 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 				Data: "2.fb2",
 			},
 		}
+		payload := map[string]interface{}{
+			"chat_id": testChatID,
+			"text":    "Some random quote",
+		}
+		updateProcessor.EXPECT().ProcessCallback(upd.CallbackQuery).Return(payload, nil)
 		body, _ := json.Marshal(upd)
 		url := fmt.Sprintf("http://%s:%s/telegram", cfg.Host, cfg.Port)
 		resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
@@ -131,7 +148,7 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(reply).To(HaveKey("text"))
-		Expect(len(reply["text"].(string))).To(BeNumerically(">", 20))
+		Expect(reply["text"].(string)).To(Equal("Some random quote"))
 	})
 })
 

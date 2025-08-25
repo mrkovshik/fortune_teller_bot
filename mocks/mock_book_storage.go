@@ -33,6 +33,20 @@ func (m *MockBookStorage) EXPECT() *MockBookStorageMockRecorder {
 	return m.recorder
 }
 
+// GetRandomBookTitle mocks base method.
+func (m *MockBookStorage) GetRandomBookTitle() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRandomBookTitle")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetRandomBookTitle indicates an expected call of GetRandomBookTitle.
+func (mr *MockBookStorageMockRecorder) GetRandomBookTitle() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRandomBookTitle", reflect.TypeOf((*MockBookStorage)(nil).GetRandomBookTitle))
+}
+
 // GetRandomSentenceFromBook mocks base method.
 func (m *MockBookStorage) GetRandomSentenceFromBook(arg0 string, arg1 int64) (string, error) {
 	m.ctrl.T.Helper()

@@ -52,7 +52,7 @@ var (
 		CallbackData: HelpCommandName,
 	}
 
-	startMenu = InlineKeyboardMarkup{
+	StartMenu = InlineKeyboardMarkup{
 		InlineKeyboard: [][]InlineKeyboardButton{
 			{getRandomQuoteButton},
 			{askQuestionButton},

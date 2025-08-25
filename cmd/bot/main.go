@@ -10,7 +10,8 @@ import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/poker"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/statestorage/inmemory"
+	inmemorystep "github.com/mrkovshik/fortune_teller_bot/internal/storage/steps/inmemory"
+	inmemoryuserdata "github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata/inmemory"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor/basic"
 	"go.uber.org/zap"
 )
@@ -33,8 +34,9 @@ func main() {
 	}(logger)
 	sugaredLogger := logger.Sugar()
 	bookStorage := local.NewStorage(sugaredLogger)
-	stateStorage := inmemory.NewStateStorage()
-	commandProcessor := basic.NewUpdateProcessor(bookStorage, stateStorage, sugaredLogger)
+	stateStorage := inmemorystep.NewStepStorage()
+	userDataStorage := inmemoryuserdata.NewUserDataStorage()
+	commandProcessor := basic.NewUpdateProcessor(bookStorage, stateStorage, userDataStorage, sugaredLogger)
 	server := rest.NewRestAPIServer(commandProcessor, cfg, sugaredLogger)
 	pokeTicker := time.NewTicker(time.Duration(cfg.PokingInterval) * time.Second)
 	defer pokeTicker.Stop()

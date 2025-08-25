@@ -7,22 +7,25 @@ import (
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/statestorage"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
 	"go.uber.org/zap"
 )
 
 type UpdateProcessor struct {
-	logger       *zap.SugaredLogger
-	bookStorage  updateprocessor.BookStorage
-	stateStorage updateprocessor.StateStorage
+	logger          *zap.SugaredLogger
+	bookStorage     updateprocessor.BookStorage
+	stepStorage     updateprocessor.StepStorage
+	userDataStorage updateprocessor.UserDataStorage
 }
 
-func NewUpdateProcessor(bookStorage updateprocessor.BookStorage, stateStorage updateprocessor.StateStorage, logger *zap.SugaredLogger) *UpdateProcessor {
+func NewUpdateProcessor(bookStorage updateprocessor.BookStorage, stepStack updateprocessor.StepStorage, userDataStorage updateprocessor.UserDataStorage, logger *zap.SugaredLogger) *UpdateProcessor {
 	return &UpdateProcessor{
-		logger:       logger,
-		bookStorage:  bookStorage,
-		stateStorage: stateStorage,
+		logger:          logger,
+		bookStorage:     bookStorage,
+		stepStorage:     stepStack,
+		userDataStorage: userDataStorage,
 	}
 }
 
@@ -32,39 +35,46 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 	payload := map[string]interface{}{
 		"chat_id": chatID,
 	}
-	state, err := cp.stateStorage.Get(chatID)
+	currentStep, err := cp.stepStorage.Peek(chatID)
 	if err != nil {
 		return nil, err
 	}
-	if state == nil {
-		state = statestorage.NewChatState()
-		cp.stateStorage.Add(chatID, state)
+	if currentStep == "" {
+		if err := cp.stepStorage.Push(chatID, steps.SelectStartCommand); err != nil {
+			return nil, err
+		}
 	}
-
-	currentStep, exist := state.StepStack.Peek()
-	if !exist {
-		currentStep = statestorage.SelectStartCommand
-		state.StepStack.Push(currentStep)
-	}
-
 	switch currentStep {
-	case statestorage.AskingQuestion:
+	case steps.AskingQuestion:
 		var seed int64
 		for i := 0; i < len(command); i++ {
 			seed += int64(command[i])
 		}
-		text, err := cp.bookStorage.GetRandomSentenceFromBook(local.GetRandomBookTitle(), seed)
+		prevStep, err := cp.stepStorage.PeekPrevious(chatID)
+		if err != nil {
+			return nil, err
+		}
+		var title string
+		switch prevStep {
+		case steps.SelectBook:
+			title, err = cp.userDataStorage.GetUserData(chatID, userdata.BookTitleKey)
+			if err != nil {
+				return nil, err
+			}
+		case steps.AskingQuestionMenu:
+			title = cp.bookStorage.GetRandomBookTitle()
+		}
+
+		text, err := cp.bookStorage.GetRandomSentenceFromBook(title, seed)
 		if err != nil {
 			return nil, err
 		}
 		payload["text"] = text
-		state.StepStack = statestorage.NewStepStack()
-		state.StepStack.Push(statestorage.SelectStartCommand)
-		cp.stateStorage.Update(chatID, state)
+		cp.stepStorage.Clear(chatID)
 
-	case statestorage.SelectStartCommand:
+	case steps.SelectStartCommand:
 		payload["text"] = "Что бы вы хотели сделать?"
-		payload["reply_markup"] = startMenu
+		payload["reply_markup"] = StartMenu
 	}
 	return payload, nil
 }
@@ -74,109 +84,99 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	payload := map[string]interface{}{
 		"chat_id": chatID,
 	}
-	state, err := cp.stateStorage.Get(chatID)
+	currentStep, err := cp.stepStorage.Peek(chatID)
 	if err != nil {
 		return nil, err
 	}
-	if state == nil {
-		state = statestorage.NewChatState()
-		cp.stateStorage.Add(chatID, state)
+	if currentStep == "" {
+		if err := cp.stepStorage.Push(chatID, steps.SelectStartCommand); err != nil {
+			return nil, err
+		}
 	}
 
-	currentStep, exist := state.StepStack.Peek()
-	if !exist {
-		currentStep = statestorage.SelectStartCommand
-		state.StepStack.Push(currentStep)
-	}
 	commandName := strings.TrimPrefix(callback.Data, string(currentStep))
 	command := CallbackCommand(strings.TrimPrefix(commandName, ":"))
 	switch currentStep {
-	case statestorage.SelectStartCommand:
+	case steps.SelectStartCommand:
 
 		switch command {
 		case GetRandomSentenceCommandName:
 			payload["text"] = "Какую книгу вы хотите использовать для получения случайной цитаты?"
 			payload["reply_markup"] = selectSourceMenu
-			state.StepStack.Push(statestorage.GetRandomSentenceMenu)
-			cp.stateStorage.Update(chatID, state)
+			if err := cp.stepStorage.Push(chatID, steps.GetRandomSentenceMenu); err != nil {
+				return nil, err
+			}
 
 		case AskQuestionCommandName:
 			payload["text"] = "Какую книгу вы хотите использовать для получения ответа на ваш вопрос?"
 			payload["reply_markup"] = selectSourceMenu
-			state.StepStack.Push(statestorage.AskingQuestionMenu)
-			cp.stateStorage.Update(chatID, state)
+			if err := cp.stepStorage.Push(chatID, steps.AskingQuestionMenu); err != nil {
+				return nil, err
+			}
 
 		case HelpCommandName:
 			payload["text"] = "Есть такая народная забава - гадать на книгах. Человек мысленно или вслух задает вопрос, потом говорит случайную страницу и строку, и книга дает ему ответ. " +
 				"Здесь все почти так же) Вы можете задать свой вопрос текстом - тогда бот использует этот текст для генерации случайных чисел, а можете просто получить случайную цитату из выбранной книги.\n\n" +
 				"Что бы вы хотели сделать?"
-			state.StepStack = statestorage.NewStepStack()
-			state.StepStack.Push(statestorage.SelectStartCommand)
-			cp.stateStorage.Update(chatID, state)
-			payload["reply_markup"] = startMenu
+			payload["reply_markup"] = StartMenu
 		default:
 			payload["text"] = "Так оно не работает. Используйте последнее меню или начните заново, нажав /start"
 		}
-	case statestorage.SelectBook:
-		prevStep, exist := state.StepStack.PeekPrevious()
-		if !exist {
+	case steps.SelectBook:
+		prevStep, err := cp.stepStorage.PeekPrevious(chatID)
+		if err != nil {
 			return nil, err
 		}
 		switch prevStep {
-		case statestorage.AskingQuestionMenu:
+		case steps.AskingQuestionMenu:
 			payload["text"] = "Напишите вопрос, на который бы хотели получить ответ из книги, и мы используем его, как базу для поиска предсказания"
-			state.StepStack.Push(statestorage.AskingQuestion)
-			cp.stateStorage.Update(chatID, state)
-		case statestorage.GetRandomSentenceMenu:
-			bookTitle, exist := local.FileNameToTitle[callback.Data]
-			if !exist {
-				payload["text"] = fmt.Sprintf("Книга с таким именем файла не найдена: %s", callback.Data)
-				break
+			if err := cp.stepStorage.Push(chatID, steps.AskingQuestion); err != nil {
+				return nil, err
 			}
+		case steps.GetRandomSentenceMenu:
 
-			text, err := cp.bookStorage.GetRandomSentenceFromBook(bookTitle, time.Now().UnixNano())
+			text, err := cp.bookStorage.GetRandomSentenceFromBook(callback.Data, time.Now().UnixNano())
 			if err != nil {
 				return nil, err
 			}
 			payload["text"] = text
-			state.StepStack = statestorage.NewStepStack()
-			state.StepStack.Push(statestorage.SelectStartCommand)
-			cp.stateStorage.Update(chatID, state)
+			cp.stepStorage.Clear(chatID)
 		default:
 			payload["text"] = "Так оно не работает. Используйте последнее меню или начните заново, нажав /start"
 		}
 
-	case statestorage.AskingQuestionMenu:
+	case steps.AskingQuestionMenu:
 		switch command {
 		case ListBooksCommandName:
 			payload, err = cp.generateListBooksMenuPayload(chatID)
 			if err != nil {
 				return nil, err
 			}
-			state.StepStack.Push(statestorage.SelectBook)
-			cp.stateStorage.Update(chatID, state)
+			if err := cp.stepStorage.Push(chatID, steps.SelectBook); err != nil {
+				return nil, err
+			}
 		case UseRandomBookCommandName:
 			payload["text"] = "Напишите вопрос, на который бы хотели получить ответ из книги, и мы используем его, как базу для поиска предсказания"
-			state.StepStack.Push(statestorage.AskingQuestion)
-			cp.stateStorage.Update(chatID, state)
+			if err := cp.stepStorage.Push(chatID, steps.AskingQuestion); err != nil {
+				return nil, err
+			}
 		case GoBackCommandName:
-			state.StepStack = statestorage.NewStepStack()
-			state.StepStack.Push(statestorage.SelectStartCommand)
-			cp.stateStorage.Update(chatID, state)
+			cp.stepStorage.Clear(chatID)
 			payload["text"] = "Возвращаемся назад"
-			payload["reply_markup"] = startMenu
+			payload["reply_markup"] = StartMenu
 		default:
 			payload["text"] = "Так оно не работает. Используйте последнее меню или начните заново, нажав /start"
 		}
-	case statestorage.GetRandomSentenceMenu:
+	case steps.GetRandomSentenceMenu:
 		switch command {
 		case ListBooksCommandName:
 			payload, err = cp.generateListBooksMenuPayload(chatID)
 			if err != nil {
 				return nil, err
 			}
-			state.StepStack.Push(statestorage.SelectBook)
-			cp.stateStorage.Update(chatID, state)
+			if err := cp.stepStorage.Push(chatID, steps.SelectBook); err != nil {
+				return nil, err
+			}
 		case UseRandomBookCommandName:
 			text, err := cp.bookStorage.GetRandomSentenceFromBook(local.GetRandomBookTitle(), time.Now().UnixNano())
 			if err != nil {
@@ -186,13 +186,11 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 				text = "Извините, не получилось предсказать будущее"
 			}
 			payload["text"] = text
-			cp.stateStorage.Clear(chatID)
+			cp.stepStorage.Clear(chatID)
 		case GoBackCommandName:
-			state.StepStack = statestorage.NewStepStack()
-			state.StepStack.Push(statestorage.SelectStartCommand)
-			cp.stateStorage.Update(chatID, state)
+			cp.stepStorage.Clear(chatID)
 			payload["text"] = "Возвращаемся назад"
-			payload["reply_markup"] = startMenu
+			payload["reply_markup"] = StartMenu
 		default:
 			payload["text"] = "Так оно не работает. Используйте последнее меню или начните заново, нажав /start"
 		}
