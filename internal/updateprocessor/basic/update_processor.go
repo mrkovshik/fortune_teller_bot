@@ -44,6 +44,7 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 		if err := cp.stepStorage.Push(chatID, steps.SelectStartCommand); err != nil {
 			return nil, err
 		}
+		currentStep = steps.SelectStartCommand
 	}
 	switch currentStep {
 	case steps.AskingQuestion:
@@ -93,6 +94,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 		if err := cp.stepStorage.Push(chatID, steps.SelectStartCommand); err != nil {
 			return nil, err
 		}
+		currentStep = steps.SelectStartCommand
 	}
 
 	commandName := strings.TrimPrefix(callback.Data, string(currentStep))
