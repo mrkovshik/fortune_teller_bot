@@ -8,7 +8,7 @@ type Config struct {
 	Port           string `env:"PORT" envDefault:"8080"`
 	Host           string `env:"HOST" envDefault:""`
 	Token          string `env:"TELEGRAM_TOKEN"`
-	PokingInterval int    `env:"POKING_INTERVAL" envDefault:"10"`
+	PokingInterval int    `env:"POKING_INTERVAL" envDefault:"1000"`
 	PokingURL      string `env:"POKING_URL" envDefault:"https://ya.ru"`
 }
 
