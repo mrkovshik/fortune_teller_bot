@@ -64,7 +64,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 		Expect(sentence).To(Equal(testQuote))
 	})
 
-	FIt("Takes answer from specific book", func() {
+	It("Takes answer from specific book", func() {
 		bookStorage.EXPECT().ListBooks().Return([]string{"some book 1", testBookTitle, "some book 3"}, nil)
 		stepStorage.EXPECT().Peek(testChatID).Return(steps.AskingQuestion, nil)
 		stepStorage.EXPECT().PeekPrevious(testChatID).Return(steps.SelectBook, nil)
