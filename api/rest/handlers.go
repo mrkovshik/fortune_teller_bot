@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
+	"go.uber.org/zap"
 )
 
 const (
@@ -18,67 +19,76 @@ const (
 	answerCallbackURL = "answerCallbackQuery"
 )
 
-func (s *restAPIServer) MessageReplyHandler(_ context.Context) func(c *gin.Context) {
+func (s *restAPIServer) MessageReplyHandler(_ context.Context) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var (
-			reply  map[string]interface{}
-			update model.Update
-			err    error
-		)
+		defer func() {
+			if !c.Writer.Written() {
+				c.String(http.StatusOK, "OK")
+			}
+		}()
+
+		var update model.Update
+
 		s.logger.Infof("Got request %s", c.Request.RequestURI)
 		if c.Request.Body == nil {
 			s.logger.Info("Empty body (maybe Telegram ping)")
-			c.AbortWithStatus(http.StatusOK)
-			return
+			return // 200 вернёт defer
 		}
-		if err := c.BindJSON(&update); err != nil {
-			s.logger.Error("BindJSON", err)
-			c.AbortWithStatus(http.StatusBadRequest)
+
+		if err := c.ShouldBindJSON(&update); err != nil {
+			s.logger.Warn("bad JSON", zap.Error(err))
 			return
 		}
 
-		if update.Message != nil {
+		switch {
+		case update.Message != nil:
 			s.logger.Infof("Got message from chatID: %d : %s", update.Message.Chat.ID, update.Message.Text)
 
-			reply, err = s.updateProcessor.ProcessMessage(update.Message)
+			reply, err := s.updateProcessor.ProcessMessage(update.Message)
 			if err != nil {
-				s.logger.Error("ProcessMessage", err)
-				c.AbortWithStatus(http.StatusBadRequest)
+				s.logger.Warn("ProcessMessage", zap.Error(err))
+				if err := s.sendMessage(map[string]interface{}{
+					"chat_id": update.Message.Chat.ID,
+					"text":    "⚠️ Что-то пошло не так. Попробуйте ещё раз позже.",
+				}); err != nil {
+					s.logger.Warn("sendMessage", zap.Error(err))
+				}
 				return
 			}
-		}
+			if err := s.sendMessage(reply); err != nil {
+				s.logger.Warn("sendMessage", zap.Error(err))
+				return
+			}
 
-		if update.CallbackQuery != nil {
+		case update.CallbackQuery != nil:
 			s.logger.Infof("Got callback from chatID: %d", update.CallbackQuery.From.ID)
-			reply, err = s.updateProcessor.ProcessCallback(update.CallbackQuery)
+
+			reply, err := s.updateProcessor.ProcessCallback(update.CallbackQuery)
 			if err != nil {
-				s.logger.Error("ProcessCallback", err)
-				c.AbortWithStatus(http.StatusBadRequest)
+				s.logger.Warn("ProcessCallback", zap.Error(err))
+				_ = s.answerCallbackQuery(update.CallbackQuery.ID)
 				return
 			}
-		}
-		s.logger.Infof("Sending reply: %s", reply["text"])
-		if err := s.sendMessage(reply); err != nil {
-			s.logger.Error("sendMessage", err)
-			c.AbortWithStatus(http.StatusBadRequest)
+			if err := s.sendMessage(reply); err != nil {
+				s.logger.Warn("sendMessage", zap.Error(err))
+				_ = s.answerCallbackQuery(update.CallbackQuery.ID)
+				return
+			}
+			_ = s.answerCallbackQuery(update.CallbackQuery.ID)
+
+		default:
+			s.logger.Info("Unsupported update type")
 			return
 		}
-
-		s.logger.Info("Sending callback answer")
-		if update.CallbackQuery != nil {
-			if err := s.answerCallbackQuery(update.CallbackQuery.ID); err != nil {
-				s.logger.Error("sendMessage", err)
-				c.AbortWithStatus(http.StatusBadRequest)
-				return
-			}
-		}
-		c.JSON(http.StatusOK, reply)
 	}
 }
 
 func (s *restAPIServer) sendMessage(payload map[string]interface{}) error {
 	url := fmt.Sprintf("%s%s/%s", telegramAPIURL, s.cfg.Token, sendMessageURL)
-	body, _ := json.Marshal(payload)
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body)) // TODO: use lib
 	if err != nil {
 		return err

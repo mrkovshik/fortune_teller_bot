@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"time"
@@ -76,16 +75,6 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 		resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
-		defer resp.Body.Close()
-		respBody, err := io.ReadAll(resp.Body)
-		Expect(err).NotTo(HaveOccurred())
-
-		var reply map[string]interface{}
-		err = json.Unmarshal(respBody, &reply)
-		Expect(err).NotTo(HaveOccurred())
-
-		Expect(reply).To(HaveKey("text"))
-		Expect(reply["text"].(string)).To(Equal("Что бы вы хотели сделать?"))
 	})
 
 	It("Responds request for random book quote", func() {
@@ -108,15 +97,6 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		defer resp.Body.Close()
-		respBody, err := io.ReadAll(resp.Body)
-		Expect(err).NotTo(HaveOccurred())
-
-		var reply map[string]interface{}
-		err = json.Unmarshal(respBody, &reply)
-		Expect(err).NotTo(HaveOccurred())
-
-		Expect(reply).To(HaveKey("text"))
-		Expect(reply["text"].(string)).To(Equal("Some random quote"))
 	})
 
 	It("Responds request for specific book quote", func() {
@@ -139,16 +119,6 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 		resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
-		defer resp.Body.Close()
-		respBody, err := io.ReadAll(resp.Body)
-		Expect(err).NotTo(HaveOccurred())
-
-		var reply map[string]interface{}
-		err = json.Unmarshal(respBody, &reply)
-		Expect(err).NotTo(HaveOccurred())
-
-		Expect(reply).To(HaveKey("text"))
-		Expect(reply["text"].(string)).To(Equal("Some random quote"))
 	})
 })
 
