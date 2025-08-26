@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
@@ -192,7 +191,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 				return nil, err
 			}
 		case UseRandomBookCommandName:
-			text, err := cp.bookStorage.GetRandomSentenceFromBook(local.GetRandomBookTitle(), time.Now().UnixNano())
+			text, err := cp.bookStorage.GetRandomSentenceFromBook(cp.bookStorage.GetRandomBookTitle(), time.Now().UnixNano())
 			if err != nil {
 				return nil, err
 			}
