@@ -59,10 +59,19 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 		var title string
 		switch prevStep {
 		case steps.SelectBook:
-			title, err = cp.userDataStorage.GetUserData(chatID, userdata.BookTitleKey)
+			idxString, err := cp.userDataStorage.GetUserData(chatID, userdata.BookTitleKey)
 			if err != nil {
 				return nil, err
 			}
+			books, err := cp.bookStorage.ListBooks()
+			if err != nil {
+				return nil, fmt.Errorf(`failed to list books: %w`, err)
+			}
+			idx, err := strconv.Atoi(idxString)
+			if err != nil {
+				return nil, err
+			}
+			title = books[idx]
 		case steps.AskingQuestionMenu:
 			title = cp.bookStorage.GetRandomBookTitle()
 		}
