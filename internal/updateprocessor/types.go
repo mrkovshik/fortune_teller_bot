@@ -25,5 +25,6 @@ type StepStorage interface {
 
 type UserDataStorage interface {
 	GetUserData(chatID int64, key string) (string, error)
+	AddUserData(chatID int64, key string, value string) error
 	ClearUserData(chatID int64) error
 }

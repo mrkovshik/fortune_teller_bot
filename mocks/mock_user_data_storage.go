@@ -33,6 +33,20 @@ func (m *MockUserDataStorage) EXPECT() *MockUserDataStorageMockRecorder {
 	return m.recorder
 }
 
+// AddUserData mocks base method.
+func (m *MockUserDataStorage) AddUserData(arg0 int64, arg1, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddUserData", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddUserData indicates an expected call of AddUserData.
+func (mr *MockUserDataStorageMockRecorder) AddUserData(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUserData", reflect.TypeOf((*MockUserDataStorage)(nil).AddUserData), arg0, arg1, arg2)
+}
+
 // ClearUserData mocks base method.
 func (m *MockUserDataStorage) ClearUserData(arg0 int64) error {
 	m.ctrl.T.Helper()

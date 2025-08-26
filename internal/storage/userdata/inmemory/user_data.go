@@ -23,6 +23,15 @@ func (s UserDataStorage) GetUserData(chatID int64, key string) (string, error) {
 	return value, nil
 }
 
+func (s UserDataStorage) AddUserData(chatID int64, key string, value string) error {
+	_, exist := s[chatID]
+	if !exist {
+		s[chatID] = make(UserData)
+	}
+	s[chatID][key] = value
+	return nil
+}
+
 func (s UserDataStorage) ClearUserData(chatID int64) error {
 	delete(s, chatID)
 	return nil

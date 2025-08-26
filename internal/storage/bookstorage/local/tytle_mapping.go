@@ -13,9 +13,9 @@ var TitleToFileName = map[string]string{
 	DorianGreyTitle:     "2.fb2",
 	ThreeOnTheBoatTitle: "1.fb2",
 	GospodaGolovlevy:    "3.fb2",
-	DetiKapitanaGranta:  "5.epub",
-	ZovKtulchu:          "6.epub",
-	ZoshenkoBest:        "8.epub",
+	DetiKapitanaGranta:  "4.epub",
+	ZovKtulchu:          "5.epub",
+	ZoshenkoBest:        "6.epub",
 }
 
 var FileNameToTitle = make(map[string]string)

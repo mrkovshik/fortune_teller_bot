@@ -132,6 +132,9 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 		}
 		switch prevStep {
 		case steps.AskingQuestionMenu:
+			if err := cp.userDataStorage.AddUserData(chatID, userdata.BookTitleKey, string(command)); err != nil {
+				return nil, err
+			}
 			payload["text"] = "Напишите вопрос, на который бы хотели получить ответ из книги, и мы используем его, как базу для поиска предсказания"
 			if err := cp.stepStorage.Push(chatID, steps.AskingQuestion); err != nil {
 				return nil, err
@@ -211,7 +214,7 @@ func (cp *UpdateProcessor) generateListBooksMenuPayload(chatID int64) (map[strin
 	for _, book := range books {
 		button := InlineKeyboardButton{
 			Text:         book,
-			CallbackData: CallbackCommand(local.TitleToFileName[book]),
+			CallbackData: CallbackCommand(book),
 		}
 		keyboard = append(keyboard, []InlineKeyboardButton{button})
 	}
