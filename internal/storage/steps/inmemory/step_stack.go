@@ -21,6 +21,7 @@ func (s StepStorage) Push(chatID int64, step steps.ChatStep) error {
 	stack, exists := s[chatID]
 	if !exists {
 		stack = list.New()
+		s[chatID] = stack
 	}
 	stack.PushBack(step)
 	return nil
