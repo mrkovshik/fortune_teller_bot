@@ -3,6 +3,7 @@ package basic
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -140,8 +141,15 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 				return nil, err
 			}
 		case steps.GetRandomSentenceMenu:
-
-			text, err := cp.bookStorage.GetRandomSentenceFromBook(callback.Data, time.Now().UnixNano())
+			books, err := cp.bookStorage.ListBooks()
+			if err != nil {
+				return nil, fmt.Errorf(`failed to list books: %w`, err)
+			}
+			idx, err := strconv.Atoi(callback.Data)
+			if err != nil {
+				return nil, err
+			}
+			text, err := cp.bookStorage.GetRandomSentenceFromBook(books[idx], time.Now().UnixNano())
 			if err != nil {
 				return nil, err
 			}
@@ -206,15 +214,15 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 }
 
 func (cp *UpdateProcessor) generateListBooksMenuPayload(chatID int64) (map[string]interface{}, error) {
-	books, err := cp.bookStorage.ListBooks()
 	var keyboard [][]InlineKeyboardButton
+	books, err := cp.bookStorage.ListBooks()
 	if err != nil {
 		return nil, fmt.Errorf(`failed to list books: %w`, err)
 	}
-	for _, book := range books {
+	for i, book := range books {
 		button := InlineKeyboardButton{
 			Text:         book,
-			CallbackData: CallbackCommand(book),
+			CallbackData: CallbackCommand(strconv.Itoa(i)),
 		}
 		keyboard = append(keyboard, []InlineKeyboardButton{button})
 	}

@@ -17,7 +17,8 @@ import (
 const (
 	testQuote     = "Awesome test quote of destiny"
 	testChatID    = int64(111)
-	testBookTitle = "3"
+	testBookTitle = "awesome book 2"
+	testBookIdx   = "1"
 )
 
 var _ = Describe("Local bookStorage functions test", func() {
@@ -49,12 +50,13 @@ var _ = Describe("Local bookStorage functions test", func() {
 		stepStorage.EXPECT().PeekPrevious(testChatID).Return(steps.GetRandomSentenceMenu, nil)
 		bookStorage.EXPECT().GetRandomSentenceFromBook(testBookTitle, gomock.Any()).Return(testQuote, nil)
 		stepStorage.EXPECT().Clear(testChatID)
+		bookStorage.EXPECT().ListBooks().Return([]string{"some book 1", testBookTitle, "some book 3"}, nil)
 		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
 			ID: "123",
 			From: model.Chat{
 				ID: testChatID,
 			},
-			Data: testBookTitle,
+			Data: testBookIdx,
 		})
 		Expect(err).NotTo(HaveOccurred())
 		sentence, ok := reply["text"].(string)
