@@ -1,6 +1,7 @@
 package basic
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -37,9 +38,9 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 	}
 	currentStep, err := cp.stepStorage.Peek(chatID)
 	if err != nil {
-		return nil, err
-	}
-	if currentStep == "" {
+		if !errors.Is(err, steps.ErrChatNotFound) {
+			return nil, err
+		}
 		if err := cp.stepStorage.Push(chatID, steps.SelectStartCommand); err != nil {
 			return nil, err
 		}
@@ -86,9 +87,9 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	}
 	currentStep, err := cp.stepStorage.Peek(chatID)
 	if err != nil {
-		return nil, err
-	}
-	if currentStep == "" {
+		if !errors.Is(err, steps.ErrChatNotFound) {
+			return nil, err
+		}
 		if err := cp.stepStorage.Push(chatID, steps.SelectStartCommand); err != nil {
 			return nil, err
 		}

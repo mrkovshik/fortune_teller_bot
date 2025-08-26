@@ -2,14 +2,8 @@ package inmemory
 
 import (
 	"container/list"
-	"errors"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
-)
-
-var (
-	ErrStepNotFound = errors.New("step not found")
-	ErrChatNotFound = errors.New("chat not found")
 )
 
 // StepStorage is a stack data structure implemented using container/list.
@@ -37,11 +31,11 @@ func (s StepStorage) Push(chatID int64, step steps.ChatStep) error {
 func (s StepStorage) Pop(chatID int64) (steps.ChatStep, error) {
 	stack, exists := s[chatID]
 	if !exists {
-		return "", ErrChatNotFound
+		return "", steps.ErrChatNotFound
 	}
 	el := stack.Back()
 	if el == nil {
-		return "", ErrStepNotFound
+		return "", steps.ErrStepNotFound
 	}
 	stack.Remove(el)
 	step := el.Value.(steps.ChatStep)
@@ -53,11 +47,11 @@ func (s StepStorage) Pop(chatID int64) (steps.ChatStep, error) {
 func (s StepStorage) Peek(chatID int64) (steps.ChatStep, error) {
 	stack, exists := s[chatID]
 	if !exists {
-		return "", ErrChatNotFound
+		return "", steps.ErrChatNotFound
 	}
 	el := stack.Back()
 	if el == nil {
-		return "", ErrStepNotFound
+		return "", steps.ErrStepNotFound
 	}
 	step := el.Value.(steps.ChatStep)
 	return step, nil
@@ -68,15 +62,15 @@ func (s StepStorage) Peek(chatID int64) (steps.ChatStep, error) {
 func (s StepStorage) PeekPrevious(chatID int64) (steps.ChatStep, error) {
 	stack, exists := s[chatID]
 	if !exists {
-		return "", ErrChatNotFound
+		return "", steps.ErrChatNotFound
 	}
 	if stack.Len() < 2 {
-		return "", ErrStepNotFound
+		return "", steps.ErrStepNotFound
 	}
 	el := stack.Back()
 	prev := el.Prev()
 	if prev == nil {
-		return "", ErrStepNotFound
+		return "", steps.ErrStepNotFound
 	}
 	step := prev.Value.(steps.ChatStep)
 	return step, nil
