@@ -34,7 +34,9 @@ func main() {
 		}
 	}(logger)
 	sugaredLogger := logger.Sugar()
-	sugaredLogger.Fatal(templates.InitTemplates(cfg.DefaultLanguage))
+	if err := templates.InitTemplates(cfg.DefaultLanguage); err != nil {
+		sugaredLogger.Fatal("can't init templates", zap.Error(err))
+	}
 	bookStorage := local.NewStorage(sugaredLogger)
 	stateStorage := inmemorystep.NewStepStorage()
 	userDataStorage := inmemoryuserdata.NewUserDataStorage()
