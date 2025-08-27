@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/mrkovshik/fortune_teller_bot/api/rest"
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
+	"github.com/mrkovshik/fortune_teller_bot/internal/embedded/templates"
 	"github.com/mrkovshik/fortune_teller_bot/internal/poker"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
 	inmemorystep "github.com/mrkovshik/fortune_teller_bot/internal/storage/steps/inmemory"
@@ -33,6 +34,7 @@ func main() {
 		}
 	}(logger)
 	sugaredLogger := logger.Sugar()
+	sugaredLogger.Fatal(templates.InitTemplates(cfg.DefaultLanguage))
 	bookStorage := local.NewStorage(sugaredLogger)
 	stateStorage := inmemorystep.NewStepStorage()
 	userDataStorage := inmemoryuserdata.NewUserDataStorage()

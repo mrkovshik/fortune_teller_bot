@@ -6,7 +6,7 @@ import (
 	"io/fs"
 	"strings"
 
-	"github.com/mrkovshik/fortune_teller_bot/internal/embedded"
+	"github.com/mrkovshik/fortune_teller_bot/internal/embedded/books"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage"
 	"github.com/mrkovshik/fortune_teller_bot/internal/textparser/epub"
 	"github.com/mrkovshik/fortune_teller_bot/internal/textparser/fb2"
@@ -20,7 +20,7 @@ type Storage struct {
 
 func NewStorage(logger *zap.SugaredLogger) *Storage {
 	return &Storage{
-		fs:     embedded.GetBooksFS(),
+		fs:     books.GetBooksFS(),
 		logger: logger,
 	}
 }
@@ -31,7 +31,7 @@ func (s *Storage) GetRandomSentenceFromBook(bookTitle string, seed int64) (strin
 	if !exists {
 		return "", fmt.Errorf("book title '%s' not exists", bookTitle)
 	}
-	data, err := s.fs.ReadFile("books/" + fileName)
+	data, err := s.fs.ReadFile("data/" + fileName)
 	if err != nil {
 		return "", fmt.Errorf("can't read book: %w", err)
 	}
@@ -53,7 +53,7 @@ func (s *Storage) GetRandomSentenceFromBook(bookTitle string, seed int64) (strin
 }
 
 func (s *Storage) ListBooks() ([]string, error) {
-	entries, err := fs.ReadDir(s.fs, "books")
+	entries, err := fs.ReadDir(s.fs, "data")
 	if err != nil {
 		return nil, err
 	}

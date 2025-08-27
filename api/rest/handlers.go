@@ -32,7 +32,7 @@ func (s *restAPIServer) MessageReplyHandler(_ context.Context) gin.HandlerFunc {
 		s.logger.Infof("Got request %s", c.Request.RequestURI)
 		if c.Request.Body == nil {
 			s.logger.Info("Empty body (maybe Telegram ping)")
-			return // 200 вернёт defer
+			return
 		}
 
 		if err := c.ShouldBindJSON(&update); err != nil {

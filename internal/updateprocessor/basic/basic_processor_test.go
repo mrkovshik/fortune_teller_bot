@@ -2,9 +2,12 @@ package basic_test
 
 import (
 	"github.com/golang/mock/gomock"
+
+	"github.com/mrkovshik/fortune_teller_bot/internal/embedded/templates"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
+
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor/basic"
 	mock "github.com/mrkovshik/fortune_teller_bot/mocks"
@@ -39,6 +42,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 		logger, err = zap.NewDevelopment()
 		testProcessor = basic.NewUpdateProcessor(bookStorage, stepStorage, userDataStorage, logger.Sugar())
 		Expect(err).NotTo(HaveOccurred())
+		Expect(templates.InitTemplates("rus")).To(Succeed())
 
 	})
 	AfterEach(func() {

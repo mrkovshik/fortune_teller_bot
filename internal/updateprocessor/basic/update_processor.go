@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mrkovshik/fortune_teller_bot/internal/embedded/templates"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
@@ -84,7 +85,7 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 		cp.stepStorage.Clear(chatID)
 
 	case steps.SelectStartCommand:
-		payload["text"] = "Что бы вы хотели сделать?"
+		payload["text"] = templates.SimpleMessages[templates.StartTemplateName]
 		payload["reply_markup"] = StartMenu
 	}
 	return payload, nil
@@ -113,26 +114,24 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 
 		switch command {
 		case GetRandomSentenceCommandName:
-			payload["text"] = "Какую книгу вы хотите использовать для получения случайной цитаты?"
+			payload["text"] = templates.SimpleMessages[templates.SelectBookForRandomTemplateName]
 			payload["reply_markup"] = selectSourceMenu
 			if err := cp.stepStorage.Push(chatID, steps.GetRandomSentenceMenu); err != nil {
 				return nil, err
 			}
 
 		case AskQuestionCommandName:
-			payload["text"] = "Какую книгу вы хотите использовать для получения ответа на ваш вопрос?"
+			payload["text"] = templates.SimpleMessages[templates.SelectBookForQuestionTemplateName]
 			payload["reply_markup"] = selectSourceMenu
 			if err := cp.stepStorage.Push(chatID, steps.AskingQuestionMenu); err != nil {
 				return nil, err
 			}
 
 		case HelpCommandName:
-			payload["text"] = "Есть такая народная забава - гадать на книгах. Человек мысленно или вслух задает вопрос, потом говорит случайную страницу и строку, и книга дает ему ответ. " +
-				"Здесь все почти так же) Вы можете задать свой вопрос текстом - тогда бот использует этот текст для генерации случайных чисел, а можете просто получить случайную цитату из выбранной книги.\n\n" +
-				"Что бы вы хотели сделать?"
+			payload["text"] = templates.SimpleMessages[templates.HelpTemplateName]
 			payload["reply_markup"] = StartMenu
 		default:
-			payload["text"] = "Так оно не работает. Используйте последнее меню или начните заново, нажав /start"
+			payload["text"] = templates.SimpleMessages[templates.InvalidButtonTemplateName]
 		}
 	case steps.SelectBook:
 		prevStep, err := cp.stepStorage.PeekPrevious(chatID)
@@ -144,7 +143,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			if err := cp.userDataStorage.AddUserData(chatID, userdata.BookTitleKey, string(command)); err != nil {
 				return nil, err
 			}
-			payload["text"] = "Напишите вопрос, на который бы хотели получить ответ из книги, и мы используем его, как базу для поиска предсказания"
+			payload["text"] = templates.SimpleMessages[templates.TypeQuestionTemplateName]
 			if err := cp.stepStorage.Push(chatID, steps.AskingQuestion); err != nil {
 				return nil, err
 			}
@@ -164,7 +163,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			payload["text"] = text
 			cp.stepStorage.Clear(chatID)
 		default:
-			payload["text"] = "Так оно не работает. Используйте последнее меню или начните заново, нажав /start"
+			payload["text"] = templates.SimpleMessages[templates.InvalidButtonTemplateName]
 		}
 
 	case steps.AskingQuestionMenu:
@@ -178,7 +177,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 				return nil, err
 			}
 		case UseRandomBookCommandName:
-			payload["text"] = "Напишите вопрос, на который бы хотели получить ответ из книги, и мы используем его, как базу для поиска предсказания"
+			payload["text"] = templates.SimpleMessages[templates.TypeQuestionTemplateName]
 			if err := cp.stepStorage.Push(chatID, steps.AskingQuestion); err != nil {
 				return nil, err
 			}
@@ -187,7 +186,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			payload["text"] = "Возвращаемся назад"
 			payload["reply_markup"] = StartMenu
 		default:
-			payload["text"] = "Так оно не работает. Используйте последнее меню или начните заново, нажав /start"
+			payload["text"] = templates.SimpleMessages[templates.InvalidButtonTemplateName]
 		}
 	case steps.GetRandomSentenceMenu:
 		switch command {
@@ -204,9 +203,6 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			if err != nil {
 				return nil, err
 			}
-			if len(text) == 0 {
-				text = "Извините, не получилось предсказать будущее"
-			}
 			payload["text"] = text
 			cp.stepStorage.Clear(chatID)
 		case GoBackCommandName:
@@ -214,7 +210,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			payload["text"] = "Возвращаемся назад"
 			payload["reply_markup"] = StartMenu
 		default:
-			payload["text"] = "Так оно не работает. Используйте последнее меню или начните заново, нажав /start"
+			payload["text"] = templates.SimpleMessages[templates.InvalidButtonTemplateName]
 		}
 	}
 
@@ -236,7 +232,7 @@ func (cp *UpdateProcessor) generateListBooksMenuPayload(chatID int64) (map[strin
 	}
 	payload := map[string]interface{}{
 		"chat_id":      chatID,
-		"text":         "Из каких книг вы хотите получить предсказание?",
+		"text":         templates.SimpleMessages[templates.ListBooksTemplateName],
 		"reply_markup": &InlineKeyboardMarkup{InlineKeyboard: keyboard},
 	}
 	return payload, nil
