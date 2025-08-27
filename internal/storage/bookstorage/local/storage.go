@@ -48,7 +48,8 @@ func (s *Storage) GetRandomSentenceFromBook(bookTitle string, seed int64) (strin
 	if err != nil {
 		return "", err
 	}
-	return sentence, nil
+	reply := fmt.Sprintf("%s (%s)", sentence, bookTitle)
+	return reply, nil
 }
 
 func (s *Storage) ListBooks() ([]string, error) {
