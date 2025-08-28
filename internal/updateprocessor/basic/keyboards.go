@@ -54,7 +54,8 @@ var (
 	}
 
 	languageButton = InlineKeyboardButton{
-		Text: "Change language / Сменить язык",
+		Text:         "Change language / Сменить язык",
+		CallbackData: LanguageCommandName,
 	}
 
 	StartMenu = InlineKeyboardMarkup{
