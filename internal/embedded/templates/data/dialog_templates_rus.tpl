@@ -40,3 +40,7 @@
 {{.Text}}
     {{.Title}}
 {{end}}
+
+{{define "change_language"}}
+Язык бота был изменен на {{.}}
+{{end}}

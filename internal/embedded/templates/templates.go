@@ -23,6 +23,7 @@ const (
 	BackTemplateName                  = "back"
 	ErrorTemplateName                 = "error"
 	QuoteTemplateName                 = "quote"
+	ChangeLanguageTemplateName        = "change_language"
 
 	English = "eng"
 	Russian = "rus"
@@ -39,11 +40,12 @@ var (
 		ListBooksTemplateName,
 		BackTemplateName,
 		ErrorTemplateName,
+		ChangeLanguageTemplateName,
 	}
 	SimpleMessages     map[string]map[string]string
-	SupportedLanguages = map[string]struct{}{
-		English: {},
-		Russian: {},
+	SupportedLanguages = map[string]string{
+		English: "English",
+		Russian: "Русский",
 	}
 )
 

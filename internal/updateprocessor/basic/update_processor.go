@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
@@ -148,11 +147,10 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 		currentStep = steps.SelectStartCommand
 	}
 
-	commandName := strings.TrimPrefix(callback.Data, string(currentStep))
-	command := CallbackCommand(strings.TrimPrefix(commandName, ":"))
+	command := CallbackCommand(callback.Data)
+
 	switch currentStep {
 	case steps.SelectStartCommand:
-
 		switch command {
 		case GetRandomSentenceCommandName:
 			payload["text"] = templates.SimpleMessages[templates.SelectBookForRandomTemplateName]
@@ -167,6 +165,18 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			if err := cp.stepStorage.Push(chatID, steps.AskingQuestionMenu); err != nil {
 				return nil, err
 			}
+
+		case LanguageCommandName:
+			payload["text"] = templates.SimpleMessages[templates.ChangeLanguageTemplateName]
+			var keyboard = make([][]InlineKeyboardButton, len(templates.SupportedLanguages))
+			for lang, langName := range templates.SupportedLanguages {
+				button := InlineKeyboardButton{
+					Text:         langName,
+					CallbackData: CallbackCommand(lang),
+				}
+				keyboard = append(keyboard, []InlineKeyboardButton{button})
+			}
+			payload["reply_markup"] = &InlineKeyboardMarkup{InlineKeyboard: keyboard}
 
 		case HelpCommandName:
 			payload["text"] = templates.SimpleMessages[templates.HelpTemplateName]
@@ -202,6 +212,22 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 				return nil, err
 			}
 			msg, err := templates.GenerateMessageWithData(templates.QuoteTemplateName, quote, userLang)
+			if err != nil {
+				return nil, err
+			}
+			payload["text"] = msg
+			cp.stepStorage.Clear(chatID)
+		case steps.SelectLanguage:
+			userLang = string(command)
+			if err := cp.userDataStorage.SaveUserData(chatID, userdata.LanguageKey, userLang); err != nil {
+				return nil, err
+			}
+			languageName, exist := templates.SupportedLanguages[userLang]
+			if !exist {
+				return nil, fmt.Errorf(`language "%s" is not supported`, userLang)
+			}
+
+			msg, err := templates.GenerateMessageWithData(templates.ChangeLanguageTemplateName, languageName, userLang)
 			if err != nil {
 				return nil, err
 			}

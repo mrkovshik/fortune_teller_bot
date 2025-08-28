@@ -40,3 +40,7 @@ Going back…
 {{.Text}}
     {{.Title}}
 {{end}}
+
+{{define "change_language"}}
+Bot language has been changed to {{.}}
+{{end}}

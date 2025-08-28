@@ -25,6 +25,7 @@ const (
 	AskQuestionCommandName       CallbackCommand = "ask_question"
 	GoBackCommandName            CallbackCommand = "go_back"
 	HelpCommandName              CallbackCommand = "help"
+	LanguageCommandName          CallbackCommand = "language"
 )
 
 var (
@@ -52,10 +53,15 @@ var (
 		CallbackData: HelpCommandName,
 	}
 
+	languageButton = InlineKeyboardButton{
+		Text: "Change language / Сменить язык",
+	}
+
 	StartMenu = InlineKeyboardMarkup{
 		InlineKeyboard: [][]InlineKeyboardButton{
 			{getRandomQuoteButton},
 			{askQuestionButton},
+			{languageButton},
 			{helpButton},
 		},
 	}
