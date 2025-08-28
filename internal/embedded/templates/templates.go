@@ -23,7 +23,8 @@ const (
 	BackTemplateName                  = "back"
 	ErrorTemplateName                 = "error"
 	QuoteTemplateName                 = "quote"
-	ChangeLanguageTemplateName        = "change_language"
+	ChangedLanguageTemplateName       = "changed_language"
+	ListLanguagesTemplateName         = "list_languages"
 
 	English = "eng"
 	Russian = "rus"
@@ -40,7 +41,7 @@ var (
 		ListBooksTemplateName,
 		BackTemplateName,
 		ErrorTemplateName,
-		ChangeLanguageTemplateName,
+		ListLanguagesTemplateName,
 	}
 	SimpleMessages     map[string]map[string]string
 	SupportedLanguages = map[string]string{
@@ -50,9 +51,13 @@ var (
 )
 
 func GenerateMessageWithData(templateName string, data interface{}, lang string) (string, error) {
-	buf := new(bytes.Buffer)
-	if err := templates[lang].ExecuteTemplate(buf, templateName, data); err != nil {
-		return "", err
+	tmpl, ok := templates[lang]
+	if !ok || tmpl == nil {
+		return "", fmt.Errorf("no templates for lang %q", lang)
+	}
+	var buf bytes.Buffer
+	if err := tmpl.ExecuteTemplate(&buf, templateName, data); err != nil {
+		return "", fmt.Errorf("execute template %q: %w", templateName, err)
 	}
 	return buf.String(), nil
 }

@@ -41,6 +41,10 @@ Going back…
     {{.Title}}
 {{end}}
 
-{{define "change_language"}}
+{{define "changed_language"}}
 Bot language has been changed to {{.}}
+{{end}}
+
+{{define "list_languages"}}
+Here are the languages supported by this bot:
 {{end}}

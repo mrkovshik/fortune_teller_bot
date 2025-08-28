@@ -41,6 +41,11 @@
     {{.Title}}
 {{end}}
 
-{{define "change_language"}}
+{{define "changed_language"}}
 Язык бота был изменен на {{.}}
+{{end}}
+
+
+{{define "list_languages"}}
+Вот языки, которые поддерживает наш бот:
 {{end}}

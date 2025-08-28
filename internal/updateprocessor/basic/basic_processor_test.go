@@ -128,4 +128,25 @@ var _ = Describe("Local bookStorage functions test", func() {
 		Expect(keyBoard.InlineKeyboard[0][0].Text).To(Equal("some book 1"))
 		Expect(len(keyBoard.InlineKeyboard)).To(BeNumerically(">", 1))
 	})
+
+	It("Get language menu", func() {
+		stepStorage.EXPECT().Peek(testChatID).Return(steps.SelectStartCommand, nil)
+		stepStorage.EXPECT().Push(testChatID, steps.SelectLanguage).Return(nil)
+
+		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
+			ID: "123",
+			From: model.Chat{
+				ID: testChatID,
+			},
+			Data: string(basic.LanguageCommandName),
+		})
+		Expect(err).NotTo(HaveOccurred())
+		sentence, ok := reply["text"].(string)
+		Expect(ok).To(BeTrue())
+		Expect(sentence).To(ContainSubstring("Вот языки, которые поддерживает наш бот:"))
+		keyBoard, ok := reply["reply_markup"].(*basic.InlineKeyboardMarkup)
+		Expect(ok).To(BeTrue())
+		Expect(keyBoard.InlineKeyboard[0][0].Text).To(Equal(templates.SupportedLanguages[templates.English]))
+		Expect(len(keyBoard.InlineKeyboard)).To(Equal(len(templates.SupportedLanguages)))
+	})
 })
