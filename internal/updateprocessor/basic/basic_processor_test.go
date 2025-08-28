@@ -49,7 +49,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(templates.InitTemplates()).To(Succeed())
 		userDataStorage.EXPECT().GetUserData(testChatID).Return(userdata.UserData{
-			userdata.LanguageKey:  "rus",
+			userdata.LanguageKey:  templates.Russian,
 			userdata.BookTitleKey: testBookIdx,
 		}, nil).AnyTimes()
 
