@@ -146,11 +146,17 @@ var _ = Describe("Local bookStorage functions test", func() {
 		Expect(sentence).To(ContainSubstring("Вот языки, которые поддерживает наш бот:"))
 		keyBoard, ok := reply["reply_markup"].(*basic.InlineKeyboardMarkup)
 		Expect(ok).To(BeTrue())
-		Expect(keyBoard.InlineKeyboard[0][0].Text).To(Equal(templates.SupportedLanguages[templates.English]))
+		for lang, langName := range templates.SupportedLanguages {
+			Expect(keyBoard.InlineKeyboard).To(ContainElement([]basic.InlineKeyboardButton{{
+				Text:         langName,
+				CallbackData: basic.CallbackCommand(lang),
+			}}))
+		}
+
 		Expect(len(keyBoard.InlineKeyboard)).To(Equal(len(templates.SupportedLanguages)))
 	})
 
-	FIt("Changing lang", func() {
+	It("Changing lang", func() {
 		stepStorage.EXPECT().Peek(testChatID).Return(steps.SelectLanguage, nil)
 		stepStorage.EXPECT().Clear(testChatID)
 		userDataStorage.EXPECT().SaveUserData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
