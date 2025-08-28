@@ -30,9 +30,9 @@ var _ = Describe("Local storage functions test", func() {
 
 	It("Takes random sentence from book", func() {
 		for title := range local.TitleToFileName {
-			sentence, err := testStorage.GetRandomSentenceFromBook(title, time.Now().UnixNano())
+			quote, err := testStorage.GetRandomSentenceFromBook(title, time.Now().UnixNano())
 			Expect(err).NotTo(HaveOccurred())
-			Expect(len(sentence)).To(BeNumerically(">", 20))
+			Expect(len(quote.Text)).To(BeNumerically(">", 20))
 		}
 	})
 })

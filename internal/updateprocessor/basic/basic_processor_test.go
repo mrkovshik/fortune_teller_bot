@@ -52,7 +52,12 @@ var _ = Describe("Local bookStorage functions test", func() {
 	It("Get random sentence from specific book", func() {
 		stepStorage.EXPECT().Peek(testChatID).Return(steps.SelectBook, nil)
 		stepStorage.EXPECT().PeekPrevious(testChatID).Return(steps.GetRandomSentenceMenu, nil)
-		bookStorage.EXPECT().GetRandomSentenceFromBook(testBookTitle, gomock.Any()).Return(testQuote, nil)
+		bookStorage.EXPECT().
+			GetRandomSentenceFromBook(testBookTitle, gomock.Any()).
+			Return(&updateprocessor.Quote{
+				Title: testBookTitle,
+				Text:  testQuote,
+			}, nil)
 		stepStorage.EXPECT().Clear(testChatID)
 		bookStorage.EXPECT().ListBooks().Return([]string{"some book 1", testBookTitle, "some book 3"}, nil)
 		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
@@ -65,7 +70,8 @@ var _ = Describe("Local bookStorage functions test", func() {
 		Expect(err).NotTo(HaveOccurred())
 		sentence, ok := reply["text"].(string)
 		Expect(ok).To(BeTrue())
-		Expect(sentence).To(Equal(testQuote))
+		Expect(sentence).To(ContainSubstring(testQuote))
+		Expect(sentence).To(ContainSubstring(testBookTitle))
 	})
 
 	It("Takes answer from specific book", func() {
@@ -73,7 +79,12 @@ var _ = Describe("Local bookStorage functions test", func() {
 		stepStorage.EXPECT().Peek(testChatID).Return(steps.AskingQuestion, nil)
 		stepStorage.EXPECT().PeekPrevious(testChatID).Return(steps.SelectBook, nil)
 		stepStorage.EXPECT().Clear(testChatID)
-		bookStorage.EXPECT().GetRandomSentenceFromBook(testBookTitle, gomock.Any()).Return(testQuote, nil)
+		bookStorage.EXPECT().
+			GetRandomSentenceFromBook(testBookTitle, gomock.Any()).
+			Return(&updateprocessor.Quote{
+				Title: testBookTitle,
+				Text:  testQuote,
+			}, nil)
 		userDataStorage.EXPECT().GetUserData(testChatID, userdata.BookTitleKey).Return(testBookIdx, nil)
 		reply, err := testProcessor.ProcessMessage(&model.Message{
 			Chat: model.Chat{
@@ -84,7 +95,8 @@ var _ = Describe("Local bookStorage functions test", func() {
 		Expect(err).NotTo(HaveOccurred())
 		sentence, ok := reply["text"].(string)
 		Expect(ok).To(BeTrue())
-		Expect(sentence).To(Equal(testQuote))
+		Expect(sentence).To(ContainSubstring(testQuote))
+		Expect(sentence).To(ContainSubstring(testBookTitle))
 	})
 
 	It("Takes random sentence from random book", func() {

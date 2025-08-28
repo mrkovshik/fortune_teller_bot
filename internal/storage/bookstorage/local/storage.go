@@ -10,6 +10,7 @@ import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage"
 	"github.com/mrkovshik/fortune_teller_bot/internal/textparser/epub"
 	"github.com/mrkovshik/fortune_teller_bot/internal/textparser/fb2"
+	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
 	"go.uber.org/zap"
 )
 
@@ -25,15 +26,15 @@ func NewStorage(logger *zap.SugaredLogger) *Storage {
 	}
 }
 
-func (s *Storage) GetRandomSentenceFromBook(bookTitle string, seed int64) (string, error) {
+func (s *Storage) GetRandomSentenceFromBook(bookTitle string, seed int64) (*updateprocessor.Quote, error) {
 	var parser bookstorage.TextParser
 	fileName, exists := TitleToFileName[bookTitle]
 	if !exists {
-		return "", fmt.Errorf("book title '%s' not exists", bookTitle)
+		return nil, fmt.Errorf("book title '%s' not exists", bookTitle)
 	}
 	data, err := s.fs.ReadFile("data/" + fileName)
 	if err != nil {
-		return "", fmt.Errorf("can't read book: %w", err)
+		return nil, fmt.Errorf("can't read book: %w", err)
 	}
 	switch {
 	case strings.HasSuffix(fileName, ".fb2"):
@@ -41,14 +42,17 @@ func (s *Storage) GetRandomSentenceFromBook(bookTitle string, seed int64) (strin
 	case strings.HasSuffix(fileName, ".epub"):
 		parser = epub.NewTextParser(s.logger)
 	default:
-		return "", fmt.Errorf("unsupported file type: %s", fileName)
+		return nil, fmt.Errorf("unsupported file type: %s", fileName)
 	}
 
 	sentence, err := parser.ParseRandomSentence(data, seed)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	reply := fmt.Sprintf("%s (%s)", sentence, bookTitle)
+	reply := &updateprocessor.Quote{
+		Text:  sentence,
+		Title: bookTitle,
+	}
 	return reply, nil
 }
 

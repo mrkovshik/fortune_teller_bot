@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	updateprocessor "github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
 )
 
 // MockBookStorage is a mock of BookStorage interface.
@@ -48,10 +49,10 @@ func (mr *MockBookStorageMockRecorder) GetRandomBookTitle() *gomock.Call {
 }
 
 // GetRandomSentenceFromBook mocks base method.
-func (m *MockBookStorage) GetRandomSentenceFromBook(arg0 string, arg1 int64) (string, error) {
+func (m *MockBookStorage) GetRandomSentenceFromBook(arg0 string, arg1 int64) (*updateprocessor.Quote, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRandomSentenceFromBook", arg0, arg1)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(*updateprocessor.Quote)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

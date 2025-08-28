@@ -5,13 +5,18 @@ import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
 )
 
+type Quote struct {
+	Text  string
+	Title string
+}
+
 type UpdateProcessor interface {
 	ProcessMessage(message *model.Message) (map[string]interface{}, error)
 	ProcessCallback(callback *model.CallbackQuery) (map[string]interface{}, error)
 }
 
 type BookStorage interface {
-	GetRandomSentenceFromBook(bookName string, seed int64) (string, error)
+	GetRandomSentenceFromBook(bookName string, seed int64) (*Quote, error)
 	ListBooks() ([]string, error)
 	GetRandomBookTitle() string
 }

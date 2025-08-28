@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mrkovshik/fortune_teller_bot/internal/embedded/templates"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	"go.uber.org/zap"
 )
@@ -49,7 +50,7 @@ func (s *restAPIServer) MessageReplyHandler(_ context.Context) gin.HandlerFunc {
 				s.logger.Warn("ProcessMessage", zap.Error(err))
 				if err := s.sendMessage(map[string]interface{}{
 					"chat_id": update.Message.Chat.ID,
-					"text":    "⚠️ Что-то пошло не так. Попробуйте ещё раз позже.",
+					"text":    templates.SimpleMessages[templates.ErrorTemplateName],
 				}); err != nil {
 					s.logger.Warn("sendMessage", zap.Error(err))
 				}

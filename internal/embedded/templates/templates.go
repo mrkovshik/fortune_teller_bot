@@ -21,6 +21,8 @@ const (
 	TypeQuestionTemplateName          = "type_question"
 	ListBooksTemplateName             = "list_books"
 	BackTemplateName                  = "back"
+	ErrorTemplateName                 = "error"
+	QuoteTemplateName                 = "quote"
 )
 
 var (
@@ -33,6 +35,7 @@ var (
 		TypeQuestionTemplateName,
 		ListBooksTemplateName,
 		BackTemplateName,
+		ErrorTemplateName,
 	}
 	SimpleMessages     map[string]string
 	SupportedLanguages = map[string]struct{}{

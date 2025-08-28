@@ -77,11 +77,15 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 			title = cp.bookStorage.GetRandomBookTitle()
 		}
 
-		text, err := cp.bookStorage.GetRandomSentenceFromBook(title, seed)
+		quote, err := cp.bookStorage.GetRandomSentenceFromBook(title, seed)
 		if err != nil {
 			return nil, err
 		}
-		payload["text"] = text
+		msg, err := templates.GenerateMessageWithData(templates.QuoteTemplateName, quote)
+		if err != nil {
+			return nil, err
+		}
+		payload["text"] = msg
 		cp.stepStorage.Clear(chatID)
 
 	case steps.SelectStartCommand:
@@ -156,11 +160,15 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			if err != nil {
 				return nil, err
 			}
-			text, err := cp.bookStorage.GetRandomSentenceFromBook(books[idx], time.Now().UnixNano())
+			quote, err := cp.bookStorage.GetRandomSentenceFromBook(books[idx], time.Now().UnixNano())
 			if err != nil {
 				return nil, err
 			}
-			payload["text"] = text
+			msg, err := templates.GenerateMessageWithData(templates.QuoteTemplateName, quote)
+			if err != nil {
+				return nil, err
+			}
+			payload["text"] = msg
 			cp.stepStorage.Clear(chatID)
 		default:
 			payload["text"] = templates.SimpleMessages[templates.InvalidButtonTemplateName]
@@ -199,11 +207,15 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 				return nil, err
 			}
 		case UseRandomBookCommandName:
-			text, err := cp.bookStorage.GetRandomSentenceFromBook(cp.bookStorage.GetRandomBookTitle(), time.Now().UnixNano())
+			quote, err := cp.bookStorage.GetRandomSentenceFromBook(cp.bookStorage.GetRandomBookTitle(), time.Now().UnixNano())
 			if err != nil {
 				return nil, err
 			}
-			payload["text"] = text
+			msg, err := templates.GenerateMessageWithData(templates.QuoteTemplateName, quote)
+			if err != nil {
+				return nil, err
+			}
+			payload["text"] = msg
 			cp.stepStorage.Clear(chatID)
 		case GoBackCommandName:
 			cp.stepStorage.Clear(chatID)
