@@ -219,22 +219,6 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			}
 			payload["text"] = msg
 			cp.stepStorage.Clear(chatID)
-		case steps.SelectLanguage:
-			userLang = string(command)
-			if err := cp.userDataStorage.SaveUserData(chatID, userdata.LanguageKey, userLang); err != nil {
-				return nil, err
-			}
-			languageName, exist := templates.SupportedLanguages[userLang]
-			if !exist {
-				return nil, fmt.Errorf(`language "%s" is not supported`, userLang)
-			}
-
-			msg, err := templates.GenerateMessageWithData(templates.ChangedLanguageTemplateName, languageName, userLang)
-			if err != nil {
-				return nil, err
-			}
-			payload["text"] = msg
-			cp.stepStorage.Clear(chatID)
 		default:
 			payload["text"] = templates.SimpleMessages[userLang][templates.InvalidButtonTemplateName]
 		}
@@ -289,6 +273,22 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 		default:
 			payload["text"] = templates.SimpleMessages[userLang][templates.InvalidButtonTemplateName]
 		}
+	case steps.SelectLanguage:
+		userLang = string(command)
+		if err := cp.userDataStorage.SaveUserData(chatID, userdata.LanguageKey, userLang); err != nil {
+			return nil, err
+		}
+		languageName, exist := templates.SupportedLanguages[userLang]
+		if !exist {
+			return nil, fmt.Errorf(`language "%s" is not supported`, userLang)
+		}
+
+		msg, err := templates.GenerateMessageWithData(templates.ChangedLanguageTemplateName, languageName, userLang)
+		if err != nil {
+			return nil, err
+		}
+		payload["text"] = msg
+		cp.stepStorage.Clear(chatID)
 	}
 
 	return payload, nil

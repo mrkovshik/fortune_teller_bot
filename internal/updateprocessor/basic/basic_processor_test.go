@@ -149,4 +149,22 @@ var _ = Describe("Local bookStorage functions test", func() {
 		Expect(keyBoard.InlineKeyboard[0][0].Text).To(Equal(templates.SupportedLanguages[templates.English]))
 		Expect(len(keyBoard.InlineKeyboard)).To(Equal(len(templates.SupportedLanguages)))
 	})
+
+	FIt("Changing lang", func() {
+		stepStorage.EXPECT().Peek(testChatID).Return(steps.SelectLanguage, nil)
+		stepStorage.EXPECT().Clear(testChatID)
+		userDataStorage.EXPECT().SaveUserData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
+			ID: "123",
+			From: model.Chat{
+				ID: testChatID,
+			},
+			Data: templates.Russian,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		sentence, ok := reply["text"].(string)
+		Expect(ok).To(BeTrue())
+		Expect(sentence).To(ContainSubstring("Язык бота был изменен на Русский"))
+	})
 })
