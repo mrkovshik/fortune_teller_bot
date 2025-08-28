@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/embedded/templates"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
@@ -17,22 +18,43 @@ import (
 
 type UpdateProcessor struct {
 	logger          *zap.SugaredLogger
+	cfg             *config.Config
 	bookStorage     updateprocessor.BookStorage
 	stepStorage     updateprocessor.StepStorage
 	userDataStorage updateprocessor.UserDataStorage
 }
 
-func NewUpdateProcessor(bookStorage updateprocessor.BookStorage, stepStack updateprocessor.StepStorage, userDataStorage updateprocessor.UserDataStorage, logger *zap.SugaredLogger) *UpdateProcessor {
+func NewUpdateProcessor(bookStorage updateprocessor.BookStorage,
+	stepStack updateprocessor.StepStorage,
+	userDataStorage updateprocessor.UserDataStorage,
+	logger *zap.SugaredLogger,
+	cfg *config.Config) *UpdateProcessor {
 	return &UpdateProcessor{
 		logger:          logger,
 		bookStorage:     bookStorage,
 		stepStorage:     stepStack,
 		userDataStorage: userDataStorage,
+		cfg:             cfg,
 	}
 }
 
 func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]interface{}, error) {
 	chatID := message.Chat.ID
+	userData, err := cp.userDataStorage.GetUserData(chatID)
+	if err != nil {
+		return nil, err
+	}
+	var userLang string
+	userLangRaw, ok := userData[userdata.LanguageKey]
+	if !ok {
+		userLang = cp.cfg.DefaultLanguage
+	} else {
+		userLang, ok = userLangRaw.(string)
+		if !ok {
+			return nil, fmt.Errorf("user language value is not a string")
+		}
+	}
+
 	command := message.Text
 	payload := map[string]interface{}{
 		"chat_id": chatID,
@@ -60,19 +82,19 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 		var title string
 		switch prevStep {
 		case steps.SelectBook:
-			idxString, err := cp.userDataStorage.GetUserData(chatID, userdata.BookTitleKey)
-			if err != nil {
-				return nil, err
+			idx, ok := userData[userdata.BookTitleKey]
+			if !ok {
+				return nil, fmt.Errorf("no title key found in userData for chatID %d", chatID)
 			}
 			books, err := cp.bookStorage.ListBooks()
 			if err != nil {
 				return nil, fmt.Errorf(`failed to list books: %w`, err)
 			}
-			idx, err := strconv.Atoi(idxString)
-			if err != nil {
-				return nil, err
+			idxInt, ok := idx.(int)
+			if !ok {
+				return nil, fmt.Errorf("invalid book index for chatID %d", chatID)
 			}
-			title = books[idx]
+			title = books[idxInt]
 		case steps.AskingQuestionMenu:
 			title = cp.bookStorage.GetRandomBookTitle()
 		}
@@ -81,7 +103,7 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 		if err != nil {
 			return nil, err
 		}
-		msg, err := templates.GenerateMessageWithData(templates.QuoteTemplateName, quote)
+		msg, err := templates.GenerateMessageWithData(templates.QuoteTemplateName, quote, userLang)
 		if err != nil {
 			return nil, err
 		}
@@ -97,6 +119,21 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 
 func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[string]interface{}, error) {
 	chatID := callback.From.ID
+	userData, err := cp.userDataStorage.GetUserData(chatID)
+	if err != nil {
+		return nil, err
+	}
+	var userLang string
+	userLangRaw, ok := userData[userdata.LanguageKey]
+	if !ok {
+		userLang = cp.cfg.DefaultLanguage
+	} else {
+		userLang, ok = userLangRaw.(string)
+		if !ok {
+			return nil, fmt.Errorf("user language value is not a string")
+		}
+	}
+
 	payload := map[string]interface{}{
 		"chat_id": chatID,
 	}
@@ -144,7 +181,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 		}
 		switch prevStep {
 		case steps.AskingQuestionMenu:
-			if err := cp.userDataStorage.AddUserData(chatID, userdata.BookTitleKey, string(command)); err != nil {
+			if err := cp.userDataStorage.SaveUserData(chatID, userdata.BookTitleKey, string(command)); err != nil {
 				return nil, err
 			}
 			payload["text"] = templates.SimpleMessages[templates.TypeQuestionTemplateName]
@@ -164,7 +201,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			if err != nil {
 				return nil, err
 			}
-			msg, err := templates.GenerateMessageWithData(templates.QuoteTemplateName, quote)
+			msg, err := templates.GenerateMessageWithData(templates.QuoteTemplateName, quote, userLang)
 			if err != nil {
 				return nil, err
 			}
@@ -177,7 +214,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	case steps.AskingQuestionMenu:
 		switch command {
 		case ListBooksCommandName:
-			payload, err = cp.generateListBooksMenuPayload(chatID)
+			payload, err = cp.generateListBooksMenuPayload(chatID, userLang)
 			if err != nil {
 				return nil, err
 			}
@@ -199,7 +236,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	case steps.GetRandomSentenceMenu:
 		switch command {
 		case ListBooksCommandName:
-			payload, err = cp.generateListBooksMenuPayload(chatID)
+			payload, err = cp.generateListBooksMenuPayload(chatID, userLang)
 			if err != nil {
 				return nil, err
 			}
@@ -211,7 +248,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			if err != nil {
 				return nil, err
 			}
-			msg, err := templates.GenerateMessageWithData(templates.QuoteTemplateName, quote)
+			msg, err := templates.GenerateMessageWithData(templates.QuoteTemplateName, quote, userLang)
 			if err != nil {
 				return nil, err
 			}
@@ -229,7 +266,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	return payload, nil
 }
 
-func (cp *UpdateProcessor) generateListBooksMenuPayload(chatID int64) (map[string]interface{}, error) {
+func (cp *UpdateProcessor) generateListBooksMenuPayload(chatID int64, lang string) (map[string]interface{}, error) {
 	var keyboard [][]InlineKeyboardButton
 	books, err := cp.bookStorage.ListBooks()
 	if err != nil {
@@ -244,7 +281,7 @@ func (cp *UpdateProcessor) generateListBooksMenuPayload(chatID int64) (map[strin
 	}
 	payload := map[string]interface{}{
 		"chat_id":      chatID,
-		"text":         templates.SimpleMessages[templates.ListBooksTemplateName],
+		"text":         templates.SimpleMessages[lang][templates.ListBooksTemplateName],
 		"reply_markup": &InlineKeyboardMarkup{InlineKeyboard: keyboard},
 	}
 	return payload, nil

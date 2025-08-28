@@ -1,13 +1,15 @@
 package basic_test
 
 import (
+	"strconv"
+
 	"github.com/golang/mock/gomock"
+	"github.com/mrkovshik/fortune_teller_bot/internal/config"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/embedded/templates"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
-
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor/basic"
 	mock "github.com/mrkovshik/fortune_teller_bot/mocks"
@@ -21,28 +23,35 @@ const (
 	testQuote     = "Awesome test quote of destiny"
 	testChatID    = int64(111)
 	testBookTitle = "awesome book 2"
-	testBookIdx   = "1"
+	testBookIdx   = 1
 )
 
 var _ = Describe("Local bookStorage functions test", func() {
 	var (
-		logger          *zap.Logger
-		ctrl            *gomock.Controller
-		err             error
-		bookStorage     *mock.MockBookStorage
-		stepStorage     *mock.MockStepStorage
-		userDataStorage *mock.MockUserDataStorage
-		testProcessor   updateprocessor.UpdateProcessor
+		logger            *zap.Logger
+		ctrl              *gomock.Controller
+		bookStorage       *mock.MockBookStorage
+		stepStorage       *mock.MockStepStorage
+		userDataStorage   *mock.MockUserDataStorage
+		testProcessor     updateprocessor.UpdateProcessor
+		testBookIdxString = strconv.Itoa(testBookIdx)
 	)
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 		bookStorage = mock.NewMockBookStorage(ctrl)
 		stepStorage = mock.NewMockStepStorage(ctrl)
 		userDataStorage = mock.NewMockUserDataStorage(ctrl)
-		logger, err = zap.NewDevelopment()
-		testProcessor = basic.NewUpdateProcessor(bookStorage, stepStorage, userDataStorage, logger.Sugar())
+		cfg, err := config.GetConfig()
 		Expect(err).NotTo(HaveOccurred())
-		Expect(templates.InitTemplates("rus")).To(Succeed())
+		logger, err = zap.NewDevelopment()
+		Expect(err).NotTo(HaveOccurred())
+		testProcessor = basic.NewUpdateProcessor(bookStorage, stepStorage, userDataStorage, logger.Sugar(), cfg)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(templates.InitTemplates()).To(Succeed())
+		userDataStorage.EXPECT().GetUserData(testChatID).Return(userdata.UserData{
+			userdata.LanguageKey:  "rus",
+			userdata.BookTitleKey: testBookIdx,
+		}, nil).AnyTimes()
 
 	})
 	AfterEach(func() {
@@ -65,7 +74,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 			From: model.Chat{
 				ID: testChatID,
 			},
-			Data: testBookIdx,
+			Data: testBookIdxString,
 		})
 		Expect(err).NotTo(HaveOccurred())
 		sentence, ok := reply["text"].(string)
@@ -85,7 +94,6 @@ var _ = Describe("Local bookStorage functions test", func() {
 				Title: testBookTitle,
 				Text:  testQuote,
 			}, nil)
-		userDataStorage.EXPECT().GetUserData(testChatID, userdata.BookTitleKey).Return(testBookIdx, nil)
 		reply, err := testProcessor.ProcessMessage(&model.Message{
 			Chat: model.Chat{
 				ID: testChatID,

@@ -34,13 +34,13 @@ func main() {
 		}
 	}(logger)
 	sugaredLogger := logger.Sugar()
-	if err := templates.InitTemplates(cfg.DefaultLanguage); err != nil {
+	if err := templates.InitTemplates(); err != nil {
 		sugaredLogger.Fatal("can't init templates", zap.Error(err))
 	}
 	bookStorage := local.NewStorage(sugaredLogger)
 	stateStorage := inmemorystep.NewStepStorage()
 	userDataStorage := inmemoryuserdata.NewUserDataStorage()
-	commandProcessor := basic.NewUpdateProcessor(bookStorage, stateStorage, userDataStorage, sugaredLogger)
+	commandProcessor := basic.NewUpdateProcessor(bookStorage, stateStorage, userDataStorage, sugaredLogger, cfg)
 	server := rest.NewRestAPIServer(commandProcessor, cfg, sugaredLogger)
 	pokeTicker := time.NewTicker(time.Duration(cfg.PokingInterval) * time.Second)
 	defer pokeTicker.Stop()

@@ -3,6 +3,7 @@ package updateprocessor
 import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
 )
 
 type Quote struct {
@@ -29,7 +30,7 @@ type StepStorage interface {
 }
 
 type UserDataStorage interface {
-	GetUserData(chatID int64, key string) (string, error)
-	AddUserData(chatID int64, key string, value string) error
+	GetUserData(chatID int64) (userdata.UserData, error)
+	SaveUserData(chatID int64, key string, value string) error
 	ClearUserData(chatID int64) error
 }
