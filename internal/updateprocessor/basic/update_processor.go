@@ -107,7 +107,11 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 			return nil, err
 		}
 		payload["text"] = msg
+		payload["reply_markup"] = model.Menus[userLang][model.StartMenu]
 		cp.stepStorage.Clear(chatID)
+		if err := cp.stepStorage.Push(chatID, steps.SelectStartCommand); err != nil {
+			return nil, err
+		}
 
 	case steps.SelectStartCommand:
 		payload["text"] = templates.SimpleMessages[userLang][templates.StartTemplateName]
@@ -218,7 +222,11 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 				return nil, err
 			}
 			payload["text"] = msg
+			payload["reply_markup"] = model.Menus[userLang][model.StartMenu]
 			cp.stepStorage.Clear(chatID)
+			if err := cp.stepStorage.Push(chatID, steps.SelectStartCommand); err != nil {
+				return nil, err
+			}
 		default:
 			payload["text"] = templates.SimpleMessages[userLang][templates.InvalidButtonTemplateName]
 		}
@@ -265,7 +273,11 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 				return nil, err
 			}
 			payload["text"] = msg
+			payload["reply_markup"] = model.Menus[userLang][model.StartMenu]
 			cp.stepStorage.Clear(chatID)
+			if err := cp.stepStorage.Push(chatID, steps.SelectStartCommand); err != nil {
+				return nil, err
+			}
 		case model.GoBackCommandName:
 			cp.stepStorage.Clear(chatID)
 			payload["text"] = templates.SimpleMessages[userLang][templates.BackTemplateName]
@@ -288,7 +300,11 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			return nil, err
 		}
 		payload["text"] = msg
+		payload["reply_markup"] = model.Menus[userLang][model.StartMenu]
 		cp.stepStorage.Clear(chatID)
+		if err := cp.stepStorage.Push(chatID, steps.SelectStartCommand); err != nil {
+			return nil, err
+		}
 	}
 
 	return payload, nil
