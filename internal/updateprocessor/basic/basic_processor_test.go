@@ -172,4 +172,24 @@ var _ = Describe("Local bookStorage functions test", func() {
 		Expect(ok).To(BeTrue())
 		Expect(sentence).To(ContainSubstring("Язык бота был изменен на Русский"))
 	})
+
+	It("Get source menu", func() {
+		stepStorage.EXPECT().Peek(testChatID).Return(steps.SelectStartCommand, nil)
+		stepStorage.EXPECT().Push(testChatID, steps.AskingQuestionMenu).Return(nil)
+
+		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
+			ID: "123",
+			From: model.Chat{
+				ID: testChatID,
+			},
+			Data: string(model.AskQuestionCommandName),
+		})
+		Expect(err).NotTo(HaveOccurred())
+		sentence, ok := reply["text"].(string)
+		Expect(ok).To(BeTrue())
+		Expect(sentence).To(ContainSubstring("Какую книгу вы хотите использовать для получения ответа на ваш вопрос?"))
+		keyBoard, ok := reply["reply_markup"].(model.InlineKeyboardMarkup)
+		Expect(ok).To(BeTrue())
+		Expect(len(keyBoard.InlineKeyboard)).To(Equal(len(model.Menus["rus"][model.SelectSourceMenu].InlineKeyboard)))
+	})
 })

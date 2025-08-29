@@ -61,6 +61,7 @@ var (
 		AskQuestionButtonName,
 		GoBackButtonName,
 		HelpButtonName,
+		ListBooksButtonName,
 		LanguageButtonName,
 	}
 
