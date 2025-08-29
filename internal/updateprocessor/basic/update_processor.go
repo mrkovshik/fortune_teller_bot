@@ -85,13 +85,13 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 			if !ok {
 				return nil, fmt.Errorf("no title key found in userData for chatID %d", chatID)
 			}
-			books, err := cp.bookStorage.ListBooks()
-			if err != nil {
-				return nil, fmt.Errorf(`failed to list books: %w`, err)
-			}
 			idxInt, ok := idx.(int)
 			if !ok {
 				return nil, fmt.Errorf("invalid book index for chatID %d", chatID)
+			}
+			books, err := cp.bookStorage.ListBooks()
+			if err != nil {
+				return nil, fmt.Errorf(`failed to list books: %w`, err)
 			}
 			title = books[idxInt]
 		case steps.AskingQuestionMenu:
@@ -197,7 +197,11 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 		}
 		switch prevStep {
 		case steps.AskingQuestionMenu:
-			if err := cp.userDataStorage.SaveUserData(chatID, userdata.BookTitleKey, string(command)); err != nil {
+			idx, err := strconv.Atoi(string(command))
+			if err != nil {
+				return nil, err
+			}
+			if err := cp.userDataStorage.SaveUserData(chatID, userdata.BookTitleKey, idx); err != nil {
 				return nil, err
 			}
 			payload["text"] = templates.SimpleMessages[userLang][templates.TypeQuestionTemplateName]
