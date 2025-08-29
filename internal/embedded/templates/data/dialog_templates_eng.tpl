@@ -34,6 +34,7 @@ Going back…
 
 {{define "error"}}
 ⚠️ Something went wrong. Please try again later
+What would you like to do next?
 {{end}}
 
 {{define "quote"}}
@@ -43,6 +44,7 @@ Going back…
 
 {{define "changed_language"}}
 Bot language has been changed to {{.}}
+What would you like to do next?
 {{end}}
 
 {{define "list_languages"}}
