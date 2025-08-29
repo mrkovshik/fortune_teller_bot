@@ -58,6 +58,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 	})
 
 	It("Get random sentence from specific book", func() {
+		stepStorage.EXPECT().Push(testChatID, steps.SelectStartCommand).Return(nil)
 		stepStorage.EXPECT().Peek(testChatID).Return(steps.SelectBook, nil)
 		stepStorage.EXPECT().PeekPrevious(testChatID).Return(steps.GetRandomSentenceMenu, nil)
 		bookStorage.EXPECT().
@@ -83,6 +84,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 	})
 
 	It("Takes answer from specific book", func() {
+		stepStorage.EXPECT().Push(testChatID, steps.SelectStartCommand).Return(nil)
 		bookStorage.EXPECT().ListBooks().Return([]string{"some book 1", testBookTitle, "some book 3"}, nil)
 		stepStorage.EXPECT().Peek(testChatID).Return(steps.AskingQuestion, nil)
 		stepStorage.EXPECT().PeekPrevious(testChatID).Return(steps.SelectBook, nil)
@@ -156,6 +158,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 	})
 
 	It("Changing lang", func() {
+		stepStorage.EXPECT().Push(testChatID, steps.SelectStartCommand).Return(nil)
 		stepStorage.EXPECT().Peek(testChatID).Return(steps.SelectLanguage, nil)
 		stepStorage.EXPECT().Clear(testChatID)
 		userDataStorage.EXPECT().SaveUserData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
