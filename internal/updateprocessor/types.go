@@ -31,6 +31,6 @@ type StepStorage interface {
 
 type UserDataStorage interface {
 	GetUserData(chatID int64) (userdata.UserData, error)
-	SaveUserData(chatID int64, key string, value string) error
+	SaveUserData(chatID int64, key string, value any) error
 	ClearUserData(chatID int64) error
 }

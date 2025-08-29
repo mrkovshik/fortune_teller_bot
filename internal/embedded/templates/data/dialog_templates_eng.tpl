@@ -48,3 +48,32 @@ Bot language has been changed to {{.}}
 {{define "list_languages"}}
 Here are the languages supported by this bot:
 {{end}}
+
+{{define "use_random_book_button"}}
+Use random book
+{{end}}
+
+{{define "get_random_sentence_button"}}
+Get random quote
+{{end}}
+
+
+{{define "list_books_button"}}
+Select book
+{{end}}
+
+{{define "ask_question_button"}}
+Ask a question
+{{end}}
+
+{{define "get_help_button"}}
+What does this bot do?
+{{end}}
+
+{{define "change_language_button"}}
+Change language
+{{end}}
+
+{{define "go_back_button"}}
+Go back
+{{end}}

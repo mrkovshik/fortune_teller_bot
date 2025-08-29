@@ -4,13 +4,16 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"log"
 	"text/template"
 )
 
 //go:embed data/*
 var templateFS embed.FS
 
-var templates = make(map[string]*template.Template)
+var templates = make(map[Language]*template.Template)
+
+type Language string
 
 const (
 	HelpTemplateName                  = "help"
@@ -26,8 +29,16 @@ const (
 	ChangedLanguageTemplateName       = "changed_language"
 	ListLanguagesTemplateName         = "list_languages"
 
-	English = "eng"
-	Russian = "rus"
+	ListBooksButtonName         = "list_books_button"
+	GetRandomSentenceButtonName = "get_random_sentence_button"
+	UseRandomBookButtonName     = "use_random_book_button"
+	AskQuestionButtonName       = "ask_question_button"
+	GoBackButtonName            = "go_back_button"
+	HelpButtonName              = "get_help_button"
+	LanguageButtonName          = "change_language_button"
+
+	English Language = "eng"
+	Russian Language = "rus"
 )
 
 var (
@@ -43,14 +54,25 @@ var (
 		ErrorTemplateName,
 		ListLanguagesTemplateName,
 	}
-	SimpleMessages     map[string]map[string]string
-	SupportedLanguages = map[string]string{
+
+	buttonsList = []string{
+		GetRandomSentenceButtonName,
+		UseRandomBookButtonName,
+		AskQuestionButtonName,
+		GoBackButtonName,
+		HelpButtonName,
+		LanguageButtonName,
+	}
+
+	SimpleMessages     map[Language]map[string]string
+	ButtonsTexts       map[Language]map[string]string
+	SupportedLanguages = map[Language]string{
 		English: "English",
 		Russian: "Русский",
 	}
 )
 
-func GenerateMessageWithData(templateName string, data interface{}, lang string) (string, error) {
+func GenerateMessageWithData(templateName string, data interface{}, lang Language) (string, error) {
 	tmpl, ok := templates[lang]
 	if !ok || tmpl == nil {
 		return "", fmt.Errorf("no templates for lang %q", lang)
@@ -62,7 +84,7 @@ func GenerateMessageWithData(templateName string, data interface{}, lang string)
 	return buf.String(), nil
 }
 
-func generateSimpleMessage(templateName string, lang string) (string, error) {
+func generateSimpleMessage(templateName string, lang Language) (string, error) {
 	buf := new(bytes.Buffer)
 	if err := templates[lang].ExecuteTemplate(buf, templateName, nil); err != nil {
 		return "", err
@@ -70,9 +92,9 @@ func generateSimpleMessage(templateName string, lang string) (string, error) {
 	return buf.String(), nil
 }
 
-func prepareSimpleMessages() (map[string]map[string]string, error) {
+func prepareSimpleMessages() (map[Language]map[string]string, error) {
 	var err error
-	result := make(map[string]map[string]string)
+	result := make(map[Language]map[string]string)
 	for language := range SupportedLanguages {
 		result[language] = make(map[string]string)
 		for _, message := range simpleMessagesList {
@@ -86,21 +108,40 @@ func prepareSimpleMessages() (map[string]map[string]string, error) {
 	return result, nil
 }
 
-func InitTemplates() error {
+func prepareButtonsTexts() (map[Language]map[string]string, error) {
+	var err error
+	result := make(map[Language]map[string]string)
+	for language := range SupportedLanguages {
+		result[language] = make(map[string]string)
+		for _, buttonName := range buttonsList {
+			result[language][buttonName], err = generateSimpleMessage(buttonName, language)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return result, nil
+}
+
+func init() {
 	var err error
 
 	for language := range SupportedLanguages {
 		path := fmt.Sprintf("data/dialog_templates_%s.tpl", language)
-		dialogTemplate := template.New("dialogTemplate_" + language)
+		dialogTemplate := template.New("dialogTemplate_" + string(language))
 		templates[language], err = dialogTemplate.ParseFS(templateFS, path)
 		if err != nil {
-			return fmt.Errorf("error parsing dialog templates: %w", err)
+			log.Fatal(fmt.Errorf("error parsing dialog templates: %w", err))
 		}
 	}
 
 	SimpleMessages, err = prepareSimpleMessages()
 	if err != nil {
-		return fmt.Errorf("error preparing simpleMessages: %w", err)
+		log.Fatal("error preparing simpleMessages: %w", err)
 	}
-	return nil
+	ButtonsTexts, err = prepareButtonsTexts()
+	if err != nil {
+		log.Fatal("error preparing ButtonsTexts: %w", err)
+	}
 }

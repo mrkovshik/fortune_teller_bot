@@ -49,3 +49,32 @@
 {{define "list_languages"}}
 Вот языки, которые поддерживает наш бот:
 {{end}}
+
+{{define "use_random_book_button"}}
+Использовать случайную книгу
+{{end}}
+
+{{define "get_random_sentence_button"}}
+Получить случайную цитату
+{{end}}
+
+
+{{define "list_books_button"}}
+Выбрать конкретную книгу
+{{end}}
+
+{{define "ask_question_button"}}
+Гадать на конкретный вопрос
+{{end}}
+
+{{define "get_help_button"}}
+Что это за бот?
+{{end}}
+
+{{define "change_language_button"}}
+Сменить язык
+{{end}}
+
+{{define "go_back_button"}}
+Вернуться назад
+{{end}}

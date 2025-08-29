@@ -47,7 +47,6 @@ var _ = Describe("Local bookStorage functions test", func() {
 		Expect(err).NotTo(HaveOccurred())
 		testProcessor = basic.NewUpdateProcessor(bookStorage, stepStorage, userDataStorage, logger.Sugar(), cfg)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(templates.InitTemplates()).To(Succeed())
 		userDataStorage.EXPECT().GetUserData(testChatID).Return(userdata.UserData{
 			userdata.LanguageKey:  templates.Russian,
 			userdata.BookTitleKey: testBookIdx,
@@ -117,13 +116,13 @@ var _ = Describe("Local bookStorage functions test", func() {
 			From: model.Chat{
 				ID: testChatID,
 			},
-			Data: string(basic.ListBooksCommandName),
+			Data: string(model.ListBooksCommandName),
 		})
 		Expect(err).NotTo(HaveOccurred())
 		sentence, ok := reply["text"].(string)
 		Expect(ok).To(BeTrue())
 		Expect(sentence).To(ContainSubstring("Из каких книг вы хотите получить предсказание?"))
-		keyBoard, ok := reply["reply_markup"].(*basic.InlineKeyboardMarkup)
+		keyBoard, ok := reply["reply_markup"].(*model.InlineKeyboardMarkup)
 		Expect(ok).To(BeTrue())
 		Expect(keyBoard.InlineKeyboard[0][0].Text).To(Equal("some book 1"))
 		Expect(len(keyBoard.InlineKeyboard)).To(BeNumerically(">", 1))
@@ -138,18 +137,18 @@ var _ = Describe("Local bookStorage functions test", func() {
 			From: model.Chat{
 				ID: testChatID,
 			},
-			Data: string(basic.LanguageCommandName),
+			Data: string(model.LanguageCommandName),
 		})
 		Expect(err).NotTo(HaveOccurred())
 		sentence, ok := reply["text"].(string)
 		Expect(ok).To(BeTrue())
 		Expect(sentence).To(ContainSubstring("Вот языки, которые поддерживает наш бот:"))
-		keyBoard, ok := reply["reply_markup"].(*basic.InlineKeyboardMarkup)
+		keyBoard, ok := reply["reply_markup"].(*model.InlineKeyboardMarkup)
 		Expect(ok).To(BeTrue())
 		for lang, langName := range templates.SupportedLanguages {
-			Expect(keyBoard.InlineKeyboard).To(ContainElement([]basic.InlineKeyboardButton{{
+			Expect(keyBoard.InlineKeyboard).To(ContainElement([]model.InlineKeyboardButton{{
 				Text:         langName,
-				CallbackData: basic.CallbackCommand(lang),
+				CallbackData: model.CallbackCommand(lang),
 			}}))
 		}
 
@@ -166,7 +165,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 			From: model.Chat{
 				ID: testChatID,
 			},
-			Data: templates.Russian,
+			Data: string(templates.Russian),
 		})
 		Expect(err).NotTo(HaveOccurred())
 		sentence, ok := reply["text"].(string)

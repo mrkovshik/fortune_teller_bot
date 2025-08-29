@@ -13,7 +13,6 @@ import (
 	"github.com/mrkovshik/fortune_teller_bot/api/rest"
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
-	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor/basic"
 	mock "github.com/mrkovshik/fortune_teller_bot/mocks"
 
 	"github.com/mrkovshik/yandex_diploma/api"
@@ -67,7 +66,7 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 		payload := map[string]interface{}{
 			"chat_id":      testChatID,
 			"text":         "Что бы вы хотели сделать?",
-			"reply_markup": basic.StartMenu,
+			"reply_markup": model.Menus["rus"][model.StartMenu],
 		}
 		updateProcessor.EXPECT().ProcessMessage(upd.Message).Return(payload, nil)
 		body, _ := json.Marshal(upd)

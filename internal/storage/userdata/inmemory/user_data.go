@@ -22,7 +22,7 @@ func (s UserDataStorage) GetUserData(chatID int64) (userdata.UserData, error) {
 	return userDataMap, nil
 }
 
-func (s UserDataStorage) SaveUserData(chatID int64, key string, value string) error {
+func (s UserDataStorage) SaveUserData(chatID int64, key string, value any) error {
 	_, exist := s[chatID]
 	if !exist {
 		s[chatID] = make(userdata.UserData)

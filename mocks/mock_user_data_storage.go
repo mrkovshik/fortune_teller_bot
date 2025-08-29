@@ -64,7 +64,7 @@ func (mr *MockUserDataStorageMockRecorder) GetUserData(arg0 interface{}) *gomock
 }
 
 // SaveUserData mocks base method.
-func (m *MockUserDataStorage) SaveUserData(arg0 int64, arg1, arg2 string) error {
+func (m *MockUserDataStorage) SaveUserData(arg0 int64, arg1 string, arg2 interface{}) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveUserData", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
