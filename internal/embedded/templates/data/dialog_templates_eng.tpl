@@ -1,6 +1,7 @@
 {{define "help"}}
 There’s an old tradition of fortune-telling with books: you ask a question, pick a random page and line, and the book gives you an answer.
 Here it works almost the same way :) You can type in your question and let the bot use it to generate a “random” prediction, or you can just ask for a random quote from a book.
+
 What would you like to do?
 {{end}}
 
@@ -34,16 +35,20 @@ Going back…
 
 {{define "error"}}
 ⚠️ Something went wrong. Please try again later
+
 What would you like to do next?
 {{end}}
 
 {{define "quote"}}
 {{.Text}}
     {{.Title}}
+
+What would you like to do next?
 {{end}}
 
 {{define "changed_language"}}
 Bot language has been changed to {{.}}
+
 What would you like to do next?
 {{end}}
 
