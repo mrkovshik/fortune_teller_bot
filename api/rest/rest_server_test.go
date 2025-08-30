@@ -102,7 +102,7 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 		upd := model.Update{
 			CallbackQuery: &model.CallbackQuery{
 				ID: "321",
-				From: model.Chat{
+				From: &model.User{
 					ID: testChatID,
 				},
 				Data: "2.fb2",

@@ -5,13 +5,15 @@ import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/embedded/templates"
 )
 
-type InlineKeyboardButton struct {
-	Text         string          `json:"text"`
-	CallbackData CallbackCommand `json:"callback_data"`
-}
-
 type InlineKeyboardMarkup struct {
 	InlineKeyboard [][]InlineKeyboardButton `json:"inline_keyboard"`
+}
+
+type InlineKeyboardButton struct {
+	Text              string          `json:"text"`
+	CallbackData      CallbackCommand `json:"callback_data,omitempty"`
+	URL               string          `json:"url,omitempty"`
+	SwitchInlineQuery string          `json:"switch_inline_query,omitempty"`
 }
 
 var Menus = make(map[config.Language]map[string]InlineKeyboardMarkup)

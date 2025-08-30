@@ -70,7 +70,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 		bookStorage.EXPECT().ListBooks(config.Russian).Return([]string{"some book 1", testBookTitle, "some book 3"}, nil)
 		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
 			ID: "123",
-			From: model.Chat{
+			From: &model.User{
 				ID: testChatID,
 			},
 			Data: testBookIdxString,
@@ -114,7 +114,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 
 		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
 			ID: "123",
-			From: model.Chat{
+			From: &model.User{
 				ID: testChatID,
 			},
 			Data: string(model.ListBooksCommandName),
@@ -135,7 +135,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 
 		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
 			ID: "123",
-			From: model.Chat{
+			From: &model.User{
 				ID: testChatID,
 			},
 			Data: string(model.LanguageCommandName),
@@ -164,7 +164,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 
 		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
 			ID: "123",
-			From: model.Chat{
+			From: &model.User{
 				ID: testChatID,
 			},
 			Data: string(config.Russian),
@@ -181,7 +181,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 
 		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
 			ID: "123",
-			From: model.Chat{
+			From: &model.User{
 				ID: testChatID,
 			},
 			Data: string(model.AskQuestionCommandName),

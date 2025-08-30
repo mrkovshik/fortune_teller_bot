@@ -90,6 +90,7 @@ func (s *restAPIServer) sendMessage(payload map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
+	s.logger.Debugf("sending message to chatID: %v\n %v", payload["chat_id"], payload["text"])
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body)) // TODO: use lib
 	if err != nil {
 		return err
@@ -97,7 +98,13 @@ func (s *restAPIServer) sendMessage(payload map[string]interface{}) error {
 	defer resp.Body.Close()
 
 	respBody, _ := io.ReadAll(resp.Body)
-	s.logger.Infof("Telegram response: %s", string(respBody))
+	tgResp := model.SendMessageResponse{}
+	if err := json.Unmarshal(respBody, &tgResp); err != nil {
+		return err
+	}
+	if !tgResp.Ok {
+		s.logger.Debugf("Telegram response is not OK: %v", tgResp)
+	}
 	return nil
 }
 
