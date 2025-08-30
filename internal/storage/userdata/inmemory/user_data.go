@@ -1,32 +1,31 @@
 package inmemory
 
-import "fmt"
+import (
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
+)
 
 type (
-	UserData        map[string]string
-	UserDataStorage map[int64]UserData
+	UserDataStorage map[int64]userdata.UserData
 )
 
 func NewUserDataStorage() UserDataStorage {
 	return make(UserDataStorage)
 }
 
-func (s UserDataStorage) GetUserData(chatID int64, key string) (string, error) {
+func (s UserDataStorage) GetUserData(chatID int64) (userdata.UserData, error) {
 	userDataMap, exist := s[chatID]
 	if !exist {
-		return "", fmt.Errorf("data for chatID %d not found", chatID)
+		userDataMap = make(userdata.UserData)
+		s[chatID] = userDataMap
 	}
-	value, exist := userDataMap[key]
-	if !exist {
-		return "", fmt.Errorf("data for chatID %d for key %s not found", chatID, key)
-	}
-	return value, nil
+
+	return userDataMap, nil
 }
 
-func (s UserDataStorage) AddUserData(chatID int64, key string, value string) error {
+func (s UserDataStorage) SaveUserData(chatID int64, key string, value any) error {
 	_, exist := s[chatID]
 	if !exist {
-		s[chatID] = make(UserData)
+		s[chatID] = make(userdata.UserData)
 	}
 	s[chatID][key] = value
 	return nil

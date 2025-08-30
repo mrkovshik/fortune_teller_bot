@@ -1,10 +1,10 @@
-package embedded
+package books
 
 import (
 	"embed"
 )
 
-//go:embed books/*
+//go:embed data/*
 var booksFS embed.FS
 
 func GetBooksFS() embed.FS {

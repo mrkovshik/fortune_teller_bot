@@ -1,9 +1,16 @@
 package updateprocessor
 
 import (
+	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
 )
+
+type Quote struct {
+	Text  string
+	Title string
+}
 
 type UpdateProcessor interface {
 	ProcessMessage(message *model.Message) (map[string]interface{}, error)
@@ -11,9 +18,9 @@ type UpdateProcessor interface {
 }
 
 type BookStorage interface {
-	GetRandomSentenceFromBook(bookName string, seed int64) (string, error)
-	ListBooks() ([]string, error)
-	GetRandomBookTitle() string
+	GetRandomSentenceFromBook(bookName string, lang config.Language, seed int64) (*Quote, error)
+	ListBooks(lang config.Language) ([]string, error)
+	GetRandomBookTitle(lang config.Language) string
 }
 
 type StepStorage interface {
@@ -24,7 +31,7 @@ type StepStorage interface {
 }
 
 type UserDataStorage interface {
-	GetUserData(chatID int64, key string) (string, error)
-	AddUserData(chatID int64, key string, value string) error
+	GetUserData(chatID int64) (userdata.UserData, error)
+	SaveUserData(chatID int64, key string, value any) error
 	ClearUserData(chatID int64) error
 }

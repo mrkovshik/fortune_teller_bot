@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/mrkovshik/fortune_teller_bot/api/rest"
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
+	_ "github.com/mrkovshik/fortune_teller_bot/internal/embedded/templates"
 	"github.com/mrkovshik/fortune_teller_bot/internal/poker"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
 	inmemorystep "github.com/mrkovshik/fortune_teller_bot/internal/storage/steps/inmemory"
@@ -33,10 +34,11 @@ func main() {
 		}
 	}(logger)
 	sugaredLogger := logger.Sugar()
+
 	bookStorage := local.NewStorage(sugaredLogger)
 	stateStorage := inmemorystep.NewStepStorage()
 	userDataStorage := inmemoryuserdata.NewUserDataStorage()
-	commandProcessor := basic.NewUpdateProcessor(bookStorage, stateStorage, userDataStorage, sugaredLogger)
+	commandProcessor := basic.NewUpdateProcessor(bookStorage, stateStorage, userDataStorage, sugaredLogger, cfg)
 	server := rest.NewRestAPIServer(commandProcessor, cfg, sugaredLogger)
 	pokeTicker := time.NewTicker(time.Duration(cfg.PokingInterval) * time.Second)
 	defer pokeTicker.Stop()

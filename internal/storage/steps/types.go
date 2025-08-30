@@ -15,4 +15,5 @@ const (
 	AskingQuestion        = ChatStep("asking_question")
 	AskingQuestionMenu    = ChatStep("asking_question_menu")
 	GetRandomSentenceMenu = ChatStep("get_random_sentence_menu")
+	SelectLanguage        = ChatStep("select_language")
 )

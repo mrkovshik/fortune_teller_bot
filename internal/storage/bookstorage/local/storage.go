@@ -4,12 +4,15 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"path"
 	"strings"
 
-	"github.com/mrkovshik/fortune_teller_bot/internal/embedded"
+	"github.com/mrkovshik/fortune_teller_bot/internal/config"
+	"github.com/mrkovshik/fortune_teller_bot/internal/embedded/books"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage"
 	"github.com/mrkovshik/fortune_teller_bot/internal/textparser/epub"
 	"github.com/mrkovshik/fortune_teller_bot/internal/textparser/fb2"
+	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
 	"go.uber.org/zap"
 )
 
@@ -20,20 +23,21 @@ type Storage struct {
 
 func NewStorage(logger *zap.SugaredLogger) *Storage {
 	return &Storage{
-		fs:     embedded.GetBooksFS(),
+		fs:     books.GetBooksFS(),
 		logger: logger,
 	}
 }
 
-func (s *Storage) GetRandomSentenceFromBook(bookTitle string, seed int64) (string, error) {
+func (s *Storage) GetRandomSentenceFromBook(bookTitle string, lang config.Language, seed int64) (*updateprocessor.Quote, error) {
 	var parser bookstorage.TextParser
-	fileName, exists := TitleToFileName[bookTitle]
+	fileName, exists := TitleToFileName[lang][bookTitle]
 	if !exists {
-		return "", fmt.Errorf("book title '%s' not exists", bookTitle)
+		return nil, fmt.Errorf("book title '%s' not exists", bookTitle)
 	}
-	data, err := s.fs.ReadFile("books/" + fileName)
+	filePath := path.Join("data", lang.String(), fileName)
+	data, err := s.fs.ReadFile(filePath)
 	if err != nil {
-		return "", fmt.Errorf("can't read book: %w", err)
+		return nil, fmt.Errorf("can't read book: %w", err)
 	}
 	switch {
 	case strings.HasSuffix(fileName, ".fb2"):
@@ -41,18 +45,23 @@ func (s *Storage) GetRandomSentenceFromBook(bookTitle string, seed int64) (strin
 	case strings.HasSuffix(fileName, ".epub"):
 		parser = epub.NewTextParser(s.logger)
 	default:
-		return "", fmt.Errorf("unsupported file type: %s", fileName)
+		return nil, fmt.Errorf("unsupported file type: %s", fileName)
 	}
 
 	sentence, err := parser.ParseRandomSentence(data, seed)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return sentence, nil
+	reply := &updateprocessor.Quote{
+		Text:  sentence,
+		Title: bookTitle,
+	}
+	return reply, nil
 }
 
-func (s *Storage) ListBooks() ([]string, error) {
-	entries, err := fs.ReadDir(s.fs, "books")
+func (s *Storage) ListBooks(lang config.Language) ([]string, error) {
+	dataPath := path.Join("data", lang.String())
+	entries, err := fs.ReadDir(s.fs, dataPath)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +69,7 @@ func (s *Storage) ListBooks() ([]string, error) {
 	var bookNames []string
 	for _, entry := range entries {
 		if !entry.IsDir() {
-			bookTitle, exist := FileNameToTitle[entry.Name()]
+			bookTitle, exist := FileNameToTitle[lang][entry.Name()]
 			if !exist {
 				s.logger.Warnw("can't find book title for file. Please add it to 'FileNameToTitle' map or delete the file", "name", entry.Name())
 				continue
@@ -71,6 +80,6 @@ func (s *Storage) ListBooks() ([]string, error) {
 	return bookNames, nil
 }
 
-func (s *Storage) GetRandomBookTitle() string {
-	return GetRandomBookTitle()
+func (s *Storage) GetRandomBookTitle(lang config.Language) string {
+	return GetRandomBookTitle(lang)
 }

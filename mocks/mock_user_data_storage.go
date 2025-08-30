@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	userdata "github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
 )
 
 // MockUserDataStorage is a mock of UserDataStorage interface.
@@ -33,20 +34,6 @@ func (m *MockUserDataStorage) EXPECT() *MockUserDataStorageMockRecorder {
 	return m.recorder
 }
 
-// AddUserData mocks base method.
-func (m *MockUserDataStorage) AddUserData(arg0 int64, arg1, arg2 string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddUserData", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// AddUserData indicates an expected call of AddUserData.
-func (mr *MockUserDataStorageMockRecorder) AddUserData(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUserData", reflect.TypeOf((*MockUserDataStorage)(nil).AddUserData), arg0, arg1, arg2)
-}
-
 // ClearUserData mocks base method.
 func (m *MockUserDataStorage) ClearUserData(arg0 int64) error {
 	m.ctrl.T.Helper()
@@ -62,16 +49,30 @@ func (mr *MockUserDataStorageMockRecorder) ClearUserData(arg0 interface{}) *gomo
 }
 
 // GetUserData mocks base method.
-func (m *MockUserDataStorage) GetUserData(arg0 int64, arg1 string) (string, error) {
+func (m *MockUserDataStorage) GetUserData(arg0 int64) (userdata.UserData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserData", arg0, arg1)
-	ret0, _ := ret[0].(string)
+	ret := m.ctrl.Call(m, "GetUserData", arg0)
+	ret0, _ := ret[0].(userdata.UserData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserData indicates an expected call of GetUserData.
-func (mr *MockUserDataStorageMockRecorder) GetUserData(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockUserDataStorageMockRecorder) GetUserData(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserData", reflect.TypeOf((*MockUserDataStorage)(nil).GetUserData), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserData", reflect.TypeOf((*MockUserDataStorage)(nil).GetUserData), arg0)
+}
+
+// SaveUserData mocks base method.
+func (m *MockUserDataStorage) SaveUserData(arg0 int64, arg1 string, arg2 interface{}) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveUserData", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveUserData indicates an expected call of SaveUserData.
+func (mr *MockUserDataStorageMockRecorder) SaveUserData(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveUserData", reflect.TypeOf((*MockUserDataStorage)(nil).SaveUserData), arg0, arg1, arg2)
 }
