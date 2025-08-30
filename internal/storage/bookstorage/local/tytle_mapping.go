@@ -11,12 +11,16 @@ const (
 	ZoshenkoBest        = "М.Зощенко - Избранное"
 	MelvilleMobyDick    = "H.Melville - Moby Dick"
 	Frankenstein        = "M.Shelley - Frankenstein"
+	TremendousTrifles   = "G.K.Chesterton - Tremendous Trifles"
+	TheWisdomOfLife     = "A.Schopenhauer - The Wisdom of Life"
 )
 
 var TitleToFileName = map[config.Language]map[string]string{
 	config.English: {
-		MelvilleMobyDick: "2.epub",
-		Frankenstein:     "1.epub",
+		MelvilleMobyDick:  "2.epub",
+		Frankenstein:      "1.epub",
+		TremendousTrifles: "3.epub",
+		TheWisdomOfLife:   "4.epub",
 	},
 	config.Russian: {
 		DorianGreyTitle:     "2.fb2",
