@@ -7,7 +7,6 @@ import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
 
-	"github.com/mrkovshik/fortune_teller_bot/internal/embedded/templates"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
@@ -48,7 +47,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 		testProcessor = basic.NewUpdateProcessor(bookStorage, stepStorage, userDataStorage, logger.Sugar(), cfg)
 		Expect(err).NotTo(HaveOccurred())
 		userDataStorage.EXPECT().GetUserData(testChatID).Return(userdata.UserData{
-			userdata.LanguageKey:  templates.Russian,
+			userdata.LanguageKey:  config.Russian,
 			userdata.BookTitleKey: testBookIdx,
 		}, nil).AnyTimes()
 
@@ -62,13 +61,13 @@ var _ = Describe("Local bookStorage functions test", func() {
 		stepStorage.EXPECT().Peek(testChatID).Return(steps.SelectBook, nil)
 		stepStorage.EXPECT().PeekPrevious(testChatID).Return(steps.GetRandomSentenceMenu, nil)
 		bookStorage.EXPECT().
-			GetRandomSentenceFromBook(testBookTitle, gomock.Any()).
+			GetRandomSentenceFromBook(testBookTitle, config.Russian, gomock.Any()).
 			Return(&updateprocessor.Quote{
 				Title: testBookTitle,
 				Text:  testQuote,
 			}, nil)
 		stepStorage.EXPECT().Clear(testChatID)
-		bookStorage.EXPECT().ListBooks().Return([]string{"some book 1", testBookTitle, "some book 3"}, nil)
+		bookStorage.EXPECT().ListBooks(config.Russian).Return([]string{"some book 1", testBookTitle, "some book 3"}, nil)
 		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
 			ID: "123",
 			From: model.Chat{
@@ -85,12 +84,12 @@ var _ = Describe("Local bookStorage functions test", func() {
 
 	It("Takes answer from specific book", func() {
 		stepStorage.EXPECT().Push(testChatID, steps.SelectStartCommand).Return(nil)
-		bookStorage.EXPECT().ListBooks().Return([]string{"some book 1", testBookTitle, "some book 3"}, nil)
+		bookStorage.EXPECT().ListBooks(config.Russian).Return([]string{"some book 1", testBookTitle, "some book 3"}, nil)
 		stepStorage.EXPECT().Peek(testChatID).Return(steps.AskingQuestion, nil)
 		stepStorage.EXPECT().PeekPrevious(testChatID).Return(steps.SelectBook, nil)
 		stepStorage.EXPECT().Clear(testChatID)
 		bookStorage.EXPECT().
-			GetRandomSentenceFromBook(testBookTitle, gomock.Any()).
+			GetRandomSentenceFromBook(testBookTitle, config.Russian, gomock.Any()).
 			Return(&updateprocessor.Quote{
 				Title: testBookTitle,
 				Text:  testQuote,
@@ -111,7 +110,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 	It("Takes random sentence from random book", func() {
 		stepStorage.EXPECT().Peek(testChatID).Return(steps.GetRandomSentenceMenu, nil)
 		stepStorage.EXPECT().Push(testChatID, gomock.Any()).Return(nil)
-		bookStorage.EXPECT().ListBooks().Return([]string{"some book 1", "some book 2"}, nil)
+		bookStorage.EXPECT().ListBooks(config.Russian).Return([]string{"some book 1", "some book 2"}, nil)
 
 		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
 			ID: "123",
@@ -147,14 +146,14 @@ var _ = Describe("Local bookStorage functions test", func() {
 		Expect(sentence).To(ContainSubstring("Вот языки, которые поддерживает наш бот:"))
 		keyBoard, ok := reply["reply_markup"].(*model.InlineKeyboardMarkup)
 		Expect(ok).To(BeTrue())
-		for lang, langName := range templates.SupportedLanguages {
+		for lang, langName := range config.SupportedLanguages {
 			Expect(keyBoard.InlineKeyboard).To(ContainElement([]model.InlineKeyboardButton{{
 				Text:         langName,
 				CallbackData: model.CallbackCommand(lang),
 			}}))
 		}
 
-		Expect(len(keyBoard.InlineKeyboard)).To(Equal(len(templates.SupportedLanguages)))
+		Expect(len(keyBoard.InlineKeyboard)).To(Equal(len(config.SupportedLanguages)))
 	})
 
 	It("Changing lang", func() {
@@ -168,7 +167,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 			From: model.Chat{
 				ID: testChatID,
 			},
-			Data: string(templates.Russian),
+			Data: string(config.Russian),
 		})
 		Expect(err).NotTo(HaveOccurred())
 		sentence, ok := reply["text"].(string)

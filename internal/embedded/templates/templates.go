@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"log"
 	"text/template"
+
+	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 )
 
 //go:embed data/*
 var templateFS embed.FS
 
-var templates = make(map[Language]*template.Template)
-
-type Language string
+var templates = make(map[config.Language]*template.Template)
 
 const (
 	HelpTemplateName                  = "help"
@@ -36,9 +36,6 @@ const (
 	GoBackButtonName            = "go_back_button"
 	HelpButtonName              = "get_help_button"
 	LanguageButtonName          = "change_language_button"
-
-	English Language = "eng"
-	Russian Language = "rus"
 )
 
 var (
@@ -65,15 +62,11 @@ var (
 		LanguageButtonName,
 	}
 
-	SimpleMessages     map[Language]map[string]string
-	ButtonsTexts       map[Language]map[string]string
-	SupportedLanguages = map[Language]string{
-		English: "English",
-		Russian: "Русский",
-	}
+	SimpleMessages map[config.Language]map[string]string
+	ButtonsTexts   map[config.Language]map[string]string
 )
 
-func GenerateMessageWithData(templateName string, data interface{}, lang Language) (string, error) {
+func GenerateMessageWithData(templateName string, data interface{}, lang config.Language) (string, error) {
 	tmpl, ok := templates[lang]
 	if !ok || tmpl == nil {
 		return "", fmt.Errorf("no templates for lang %q", lang)
@@ -85,7 +78,7 @@ func GenerateMessageWithData(templateName string, data interface{}, lang Languag
 	return buf.String(), nil
 }
 
-func generateSimpleMessage(templateName string, lang Language) (string, error) {
+func generateSimpleMessage(templateName string, lang config.Language) (string, error) {
 	buf := new(bytes.Buffer)
 	if err := templates[lang].ExecuteTemplate(buf, templateName, nil); err != nil {
 		return "", err
@@ -93,10 +86,10 @@ func generateSimpleMessage(templateName string, lang Language) (string, error) {
 	return buf.String(), nil
 }
 
-func prepareSimpleMessages() (map[Language]map[string]string, error) {
+func prepareSimpleMessages() (map[config.Language]map[string]string, error) {
 	var err error
-	result := make(map[Language]map[string]string)
-	for language := range SupportedLanguages {
+	result := make(map[config.Language]map[string]string)
+	for language := range config.SupportedLanguages {
 		result[language] = make(map[string]string)
 		for _, message := range simpleMessagesList {
 			result[language][message], err = generateSimpleMessage(message, language)
@@ -109,10 +102,10 @@ func prepareSimpleMessages() (map[Language]map[string]string, error) {
 	return result, nil
 }
 
-func prepareButtonsTexts() (map[Language]map[string]string, error) {
+func prepareButtonsTexts() (map[config.Language]map[string]string, error) {
 	var err error
-	result := make(map[Language]map[string]string)
-	for language := range SupportedLanguages {
+	result := make(map[config.Language]map[string]string)
+	for language := range config.SupportedLanguages {
 		result[language] = make(map[string]string)
 		for _, buttonName := range buttonsList {
 			result[language][buttonName], err = generateSimpleMessage(buttonName, language)
@@ -128,7 +121,7 @@ func prepareButtonsTexts() (map[Language]map[string]string, error) {
 func init() {
 	var err error
 
-	for language := range SupportedLanguages {
+	for language := range config.SupportedLanguages {
 		path := fmt.Sprintf("data/dialog_templates_%s.tpl", language)
 		dialogTemplate := template.New("dialogTemplate_" + string(language))
 		templates[language], err = dialogTemplate.ParseFS(templateFS, path)

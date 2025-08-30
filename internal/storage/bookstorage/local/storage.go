@@ -4,8 +4,10 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"path"
 	"strings"
 
+	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/embedded/books"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage"
 	"github.com/mrkovshik/fortune_teller_bot/internal/textparser/epub"
@@ -26,13 +28,14 @@ func NewStorage(logger *zap.SugaredLogger) *Storage {
 	}
 }
 
-func (s *Storage) GetRandomSentenceFromBook(bookTitle string, seed int64) (*updateprocessor.Quote, error) {
+func (s *Storage) GetRandomSentenceFromBook(bookTitle string, lang config.Language, seed int64) (*updateprocessor.Quote, error) {
 	var parser bookstorage.TextParser
-	fileName, exists := TitleToFileName[bookTitle]
+	fileName, exists := TitleToFileName[lang][bookTitle]
 	if !exists {
 		return nil, fmt.Errorf("book title '%s' not exists", bookTitle)
 	}
-	data, err := s.fs.ReadFile("data/" + fileName)
+	filePath := path.Join("data", lang.String(), fileName)
+	data, err := s.fs.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("can't read book: %w", err)
 	}
@@ -56,8 +59,9 @@ func (s *Storage) GetRandomSentenceFromBook(bookTitle string, seed int64) (*upda
 	return reply, nil
 }
 
-func (s *Storage) ListBooks() ([]string, error) {
-	entries, err := fs.ReadDir(s.fs, "data")
+func (s *Storage) ListBooks(lang config.Language) ([]string, error) {
+	dataPath := path.Join("data", lang.String())
+	entries, err := fs.ReadDir(s.fs, dataPath)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +69,7 @@ func (s *Storage) ListBooks() ([]string, error) {
 	var bookNames []string
 	for _, entry := range entries {
 		if !entry.IsDir() {
-			bookTitle, exist := FileNameToTitle[entry.Name()]
+			bookTitle, exist := FileNameToTitle[lang][entry.Name()]
 			if !exist {
 				s.logger.Warnw("can't find book title for file. Please add it to 'FileNameToTitle' map or delete the file", "name", entry.Name())
 				continue
@@ -76,6 +80,6 @@ func (s *Storage) ListBooks() ([]string, error) {
 	return bookNames, nil
 }
 
-func (s *Storage) GetRandomBookTitle() string {
-	return GetRandomBookTitle()
+func (s *Storage) GetRandomBookTitle(lang config.Language) string {
+	return GetRandomBookTitle(lang)
 }

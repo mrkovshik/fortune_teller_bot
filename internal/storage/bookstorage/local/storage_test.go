@@ -3,6 +3,7 @@ package local_test
 import (
 	"time"
 
+	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/bookstorage/local"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -22,17 +23,21 @@ var _ = Describe("Local storage functions test", func() {
 	})
 
 	It("Builds books list", func() {
-		booksList, err := testStorage.ListBooks()
-		Expect(err).NotTo(HaveOccurred())
-		Expect(booksList).NotTo(BeNil())
-		Expect(len(booksList)).To(Equal(len(local.TitleToFileName)))
+		for lang := range config.SupportedLanguages {
+			booksList, err := testStorage.ListBooks(lang)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(booksList).NotTo(BeNil())
+			Expect(len(booksList)).To(Equal(len(local.TitleToFileName[lang])))
+		}
 	})
 
 	It("Takes random sentence from book", func() {
-		for title := range local.TitleToFileName {
-			quote, err := testStorage.GetRandomSentenceFromBook(title, time.Now().UnixNano())
-			Expect(err).NotTo(HaveOccurred())
-			Expect(len(quote.Text)).To(BeNumerically(">", 20))
+		for lang := range config.SupportedLanguages {
+			for title := range local.TitleToFileName[lang] {
+				quote, err := testStorage.GetRandomSentenceFromBook(title, lang, time.Now().UnixNano())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(quote.Text)).To(BeNumerically(">", 20))
+			}
 		}
 	})
 })

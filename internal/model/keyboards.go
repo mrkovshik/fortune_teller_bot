@@ -1,6 +1,9 @@
 package model
 
-import "github.com/mrkovshik/fortune_teller_bot/internal/embedded/templates"
+import (
+	"github.com/mrkovshik/fortune_teller_bot/internal/config"
+	"github.com/mrkovshik/fortune_teller_bot/internal/embedded/templates"
+)
 
 type InlineKeyboardButton struct {
 	Text         string          `json:"text"`
@@ -11,7 +14,7 @@ type InlineKeyboardMarkup struct {
 	InlineKeyboard [][]InlineKeyboardButton `json:"inline_keyboard"`
 }
 
-var Menus = make(map[templates.Language]map[string]InlineKeyboardMarkup)
+var Menus = make(map[config.Language]map[string]InlineKeyboardMarkup)
 
 type CallbackCommand string
 
@@ -45,7 +48,7 @@ var (
 )
 
 func init() {
-	for lang := range templates.SupportedLanguages {
+	for lang := range config.SupportedLanguages {
 		Menus[lang] = make(map[string]InlineKeyboardMarkup)
 		for menuName, buttonsNames := range menusToButtons {
 			var keyboard [][]InlineKeyboardButton

@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	config "github.com/mrkovshik/fortune_teller_bot/internal/config"
 	updateprocessor "github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
 )
 
@@ -35,45 +36,45 @@ func (m *MockBookStorage) EXPECT() *MockBookStorageMockRecorder {
 }
 
 // GetRandomBookTitle mocks base method.
-func (m *MockBookStorage) GetRandomBookTitle() string {
+func (m *MockBookStorage) GetRandomBookTitle(arg0 config.Language) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRandomBookTitle")
+	ret := m.ctrl.Call(m, "GetRandomBookTitle", arg0)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // GetRandomBookTitle indicates an expected call of GetRandomBookTitle.
-func (mr *MockBookStorageMockRecorder) GetRandomBookTitle() *gomock.Call {
+func (mr *MockBookStorageMockRecorder) GetRandomBookTitle(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRandomBookTitle", reflect.TypeOf((*MockBookStorage)(nil).GetRandomBookTitle))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRandomBookTitle", reflect.TypeOf((*MockBookStorage)(nil).GetRandomBookTitle), arg0)
 }
 
 // GetRandomSentenceFromBook mocks base method.
-func (m *MockBookStorage) GetRandomSentenceFromBook(arg0 string, arg1 int64) (*updateprocessor.Quote, error) {
+func (m *MockBookStorage) GetRandomSentenceFromBook(arg0 string, arg1 config.Language, arg2 int64) (*updateprocessor.Quote, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRandomSentenceFromBook", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetRandomSentenceFromBook", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*updateprocessor.Quote)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetRandomSentenceFromBook indicates an expected call of GetRandomSentenceFromBook.
-func (mr *MockBookStorageMockRecorder) GetRandomSentenceFromBook(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockBookStorageMockRecorder) GetRandomSentenceFromBook(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRandomSentenceFromBook", reflect.TypeOf((*MockBookStorage)(nil).GetRandomSentenceFromBook), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRandomSentenceFromBook", reflect.TypeOf((*MockBookStorage)(nil).GetRandomSentenceFromBook), arg0, arg1, arg2)
 }
 
 // ListBooks mocks base method.
-func (m *MockBookStorage) ListBooks() ([]string, error) {
+func (m *MockBookStorage) ListBooks(arg0 config.Language) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListBooks")
+	ret := m.ctrl.Call(m, "ListBooks", arg0)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListBooks indicates an expected call of ListBooks.
-func (mr *MockBookStorageMockRecorder) ListBooks() *gomock.Call {
+func (mr *MockBookStorageMockRecorder) ListBooks(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBooks", reflect.TypeOf((*MockBookStorage)(nil).ListBooks))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBooks", reflect.TypeOf((*MockBookStorage)(nil).ListBooks), arg0)
 }

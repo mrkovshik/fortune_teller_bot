@@ -43,12 +43,12 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 	if err != nil {
 		return nil, err
 	}
-	var userLang templates.Language
+	var userLang config.Language
 	userLangRaw, ok := userData[userdata.LanguageKey]
 	if !ok {
 		userLang = cp.cfg.DefaultLanguage
 	} else {
-		userLang, ok = userLangRaw.(templates.Language)
+		userLang, ok = userLangRaw.(config.Language)
 		if !ok {
 			return nil, fmt.Errorf("user language value is not a string")
 		}
@@ -89,16 +89,16 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 			if !ok {
 				return nil, fmt.Errorf("invalid book index for chatID %d", chatID)
 			}
-			books, err := cp.bookStorage.ListBooks()
+			books, err := cp.bookStorage.ListBooks(userLang)
 			if err != nil {
 				return nil, fmt.Errorf(`failed to list books: %w`, err)
 			}
 			title = books[idxInt]
 		case steps.AskingQuestionMenu:
-			title = cp.bookStorage.GetRandomBookTitle()
+			title = cp.bookStorage.GetRandomBookTitle(userLang)
 		}
 
-		quote, err := cp.bookStorage.GetRandomSentenceFromBook(title, seed)
+		quote, err := cp.bookStorage.GetRandomSentenceFromBook(title, userLang, seed)
 		if err != nil {
 			return nil, err
 		}
@@ -126,12 +126,12 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	if err != nil {
 		return nil, err
 	}
-	var userLang templates.Language
+	var userLang config.Language
 	userLangRaw, ok := userData[userdata.LanguageKey]
 	if !ok {
 		userLang = cp.cfg.DefaultLanguage
 	} else {
-		userLang, ok = userLangRaw.(templates.Language)
+		userLang, ok = userLangRaw.(config.Language)
 		if !ok {
 			return nil, fmt.Errorf("user language value is not a string")
 		}
@@ -173,7 +173,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 		case model.LanguageCommandName:
 			payload["text"] = templates.SimpleMessages[userLang][templates.ListLanguagesTemplateName]
 			var keyboard [][]model.InlineKeyboardButton
-			for lang, langName := range templates.SupportedLanguages {
+			for lang, langName := range config.SupportedLanguages {
 				button := model.InlineKeyboardButton{
 					Text:         langName,
 					CallbackData: model.CallbackCommand(lang),
@@ -209,7 +209,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 				return nil, err
 			}
 		case steps.GetRandomSentenceMenu:
-			books, err := cp.bookStorage.ListBooks()
+			books, err := cp.bookStorage.ListBooks(userLang)
 			if err != nil {
 				return nil, fmt.Errorf(`failed to list books: %w`, err)
 			}
@@ -217,7 +217,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			if err != nil {
 				return nil, err
 			}
-			quote, err := cp.bookStorage.GetRandomSentenceFromBook(books[idx], time.Now().UnixNano())
+			quote, err := cp.bookStorage.GetRandomSentenceFromBook(books[idx], userLang, time.Now().UnixNano())
 			if err != nil {
 				return nil, err
 			}
@@ -268,7 +268,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 				return nil, err
 			}
 		case model.UseRandomBookCommandName:
-			quote, err := cp.bookStorage.GetRandomSentenceFromBook(cp.bookStorage.GetRandomBookTitle(), time.Now().UnixNano())
+			quote, err := cp.bookStorage.GetRandomSentenceFromBook(cp.bookStorage.GetRandomBookTitle(userLang), userLang, time.Now().UnixNano())
 			if err != nil {
 				return nil, err
 			}
@@ -290,11 +290,11 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			payload["text"] = templates.SimpleMessages[userLang][templates.InvalidButtonTemplateName]
 		}
 	case steps.SelectLanguage:
-		userLang = templates.Language(command)
+		userLang = config.Language(command)
 		if err := cp.userDataStorage.SaveUserData(chatID, userdata.LanguageKey, userLang); err != nil {
 			return nil, err
 		}
-		languageName, exist := templates.SupportedLanguages[userLang]
+		languageName, exist := config.SupportedLanguages[userLang]
 		if !exist {
 			return nil, fmt.Errorf(`language "%s" is not supported`, userLang)
 		}
@@ -314,9 +314,9 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	return payload, nil
 }
 
-func (cp *UpdateProcessor) generateListBooksMenuPayload(chatID int64, lang templates.Language) (map[string]interface{}, error) {
+func (cp *UpdateProcessor) generateListBooksMenuPayload(chatID int64, lang config.Language) (map[string]interface{}, error) {
 	var keyboard [][]model.InlineKeyboardButton
-	books, err := cp.bookStorage.ListBooks()
+	books, err := cp.bookStorage.ListBooks(lang)
 	if err != nil {
 		return nil, fmt.Errorf(`failed to list books: %w`, err)
 	}

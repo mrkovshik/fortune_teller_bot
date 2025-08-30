@@ -1,6 +1,7 @@
 package updateprocessor
 
 import (
+	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
@@ -17,9 +18,9 @@ type UpdateProcessor interface {
 }
 
 type BookStorage interface {
-	GetRandomSentenceFromBook(bookName string, seed int64) (*Quote, error)
-	ListBooks() ([]string, error)
-	GetRandomBookTitle() string
+	GetRandomSentenceFromBook(bookName string, lang config.Language, seed int64) (*Quote, error)
+	ListBooks(lang config.Language) ([]string, error)
+	GetRandomBookTitle(lang config.Language) string
 }
 
 type StepStorage interface {
