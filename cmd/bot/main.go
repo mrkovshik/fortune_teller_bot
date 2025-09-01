@@ -5,15 +5,19 @@ import (
 	"log"
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"github.com/mrkovshik/fortune_teller_bot/api/rest"
 	"github.com/mrkovshik/fortune_teller_bot/internal/books-repository/embedded"
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/poker"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta/inmemory"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta/postgres"
 	inmemorystep "github.com/mrkovshik/fortune_teller_bot/internal/storage/steps/inmemory"
 	inmemoryuserdata "github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata/inmemory"
 	_ "github.com/mrkovshik/fortune_teller_bot/internal/templates"
+	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor/basic"
 	"go.uber.org/zap"
 )
@@ -35,8 +39,15 @@ func main() {
 		}
 	}(logger)
 	sugaredLogger := logger.Sugar()
-
-	bookStorage := inmemory.Storage
+	var bookStorage updateprocessor.BookStorage
+	bookStorage = inmemory.Storage
+	if cfg.DatabaseURI != "" {
+		db, err := sqlx.Connect("postgres", cfg.DatabaseURI)
+		if err != nil {
+			log.Fatal(err)
+		}
+		bookStorage = postgres.NewStorage(db)
+	}
 	stateStorage := inmemorystep.NewStepStorage()
 	userDataStorage := inmemoryuserdata.NewUserDataStorage()
 	booksRepository := embedded.NewRepository()
