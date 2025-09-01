@@ -8,6 +8,7 @@ import (
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	booksmeta "github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta"
+	"github.com/mrkovshik/fortune_teller_bot/internal/textparser"
 )
 
 type BooksMetaStorage map[int64]*booksmeta.Book
@@ -18,6 +19,7 @@ var Storage = BooksMetaStorage{
 		Title:    "Трое в лодке, не считая собаки",
 		Author:   "Дж.К.Джером",
 		Language: config.Russian,
+		Format:   textparser.Fb2,
 	},
 
 	2: {
@@ -25,6 +27,7 @@ var Storage = BooksMetaStorage{
 		Title:    "Портрет Дориана Грея",
 		Author:   "Оскар Уайлд",
 		Language: config.Russian,
+		Format:   textparser.Fb2,
 	},
 
 	3: {
@@ -32,48 +35,56 @@ var Storage = BooksMetaStorage{
 		Title:    "Господа Головлёвы",
 		Author:   "М.Е.Салтыков-Щедрин",
 		Language: config.Russian,
+		Format:   textparser.Fb2,
 	},
 	4: {
 		ID:       4,
 		Title:    "Дети капитана Гранта",
 		Author:   "Ж.Верн",
 		Language: config.Russian,
+		Format:   textparser.Epub,
 	},
 	5: {
 		ID:       5,
 		Title:    "Зов Ктулху",
 		Author:   "Г.Лавкрафт",
 		Language: config.Russian,
+		Format:   textparser.Epub,
 	},
 	6: {
 		ID:       6,
 		Title:    "Избранное",
 		Author:   "М.Зощенко",
 		Language: config.Russian,
+		Format:   textparser.Epub,
 	},
 	7: {
 		ID:       7,
 		Title:    "Moby Dick",
 		Author:   "H.Melville",
 		Language: config.English,
+		Format:   textparser.Epub,
 	},
 	8: {
 		ID:       8,
 		Title:    "Frankenstein",
 		Author:   "M.Shelley",
 		Language: config.English,
+		Format:   textparser.Epub,
 	},
 	9: {
 		ID:       9,
 		Title:    "Tremendous Trifles",
 		Author:   "G.K.Chesterton",
 		Language: config.English,
+		Format:   textparser.Epub,
 	},
 	10: {
 		ID:       10,
 		Title:    "The Wisdom of Life",
 		Author:   "A.Schopenhauer",
 		Language: config.English,
+		Format:   textparser.Epub,
 	},
 }
 
