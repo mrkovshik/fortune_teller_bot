@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
+	steps "github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
 )
 
 // MockStepStorage is a mock of StepStorage interface.

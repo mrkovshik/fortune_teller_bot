@@ -1,8 +1,8 @@
 package userdata
 
 const (
-	BookTitleKey = "book_title"
-	LanguageKey  = "language"
+	BookIDKey   = "book_id"
+	LanguageKey = "language"
 )
 
 type UserData map[string]any

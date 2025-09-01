@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/textparser/helpers"
-	"go.uber.org/zap"
 )
 
 type Paragraph struct {
@@ -26,14 +25,10 @@ type Body struct {
 type FictionBook struct {
 	Body Body `xml:"body"`
 }
-type TextParcer struct {
-	logger *zap.SugaredLogger
-}
+type TextParcer struct{}
 
-func NewTextParser(logger *zap.SugaredLogger) *TextParcer {
-	return &TextParcer{
-		logger: logger,
-	}
+func NewTextParser() *TextParcer {
+	return &TextParcer{}
 }
 
 func (tp *TextParcer) ParseRandomSentence(data []byte, seed int64) (string, error) {

@@ -10,6 +10,7 @@ require (
 	github.com/mrkovshik/yandex_diploma v0.0.0-20240519070422-9f19b4de67ee
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.38.0
+	github.com/samber/lo v1.51.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.41.0
 )

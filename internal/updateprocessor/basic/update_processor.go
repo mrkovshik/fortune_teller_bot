@@ -9,6 +9,7 @@ import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/embedded/templates"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
+	booksmeta "github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
@@ -19,11 +20,13 @@ type UpdateProcessor struct {
 	logger          *zap.SugaredLogger
 	cfg             *config.Config
 	bookStorage     updateprocessor.BookStorage
+	booksRepository updateprocessor.BookRepository
 	stepStorage     updateprocessor.StepStorage
 	userDataStorage updateprocessor.UserDataStorage
 }
 
 func NewUpdateProcessor(bookStorage updateprocessor.BookStorage,
+	booksRepository updateprocessor.BookRepository,
 	stepStack updateprocessor.StepStorage,
 	userDataStorage updateprocessor.UserDataStorage,
 	logger *zap.SugaredLogger,
@@ -31,6 +34,7 @@ func NewUpdateProcessor(bookStorage updateprocessor.BookStorage,
 	return &UpdateProcessor{
 		logger:          logger,
 		bookStorage:     bookStorage,
+		booksRepository: booksRepository,
 		stepStorage:     stepStack,
 		userDataStorage: userDataStorage,
 		cfg:             cfg,
@@ -78,31 +82,43 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 		if err != nil {
 			return nil, err
 		}
-		var title string
+		var book *booksmeta.Book
 		switch prevStep {
 		case steps.SelectBook:
-			idx, ok := userData[userdata.BookTitleKey]
+			bookIDRaw, ok := userData[userdata.BookIDKey]
 			if !ok {
-				return nil, fmt.Errorf("no title key found in userData for chatID %d", chatID)
+				return nil, fmt.Errorf("no id key found in userData for chatID %d", chatID)
 			}
-			idxInt, ok := idx.(int)
+			bookID, ok := bookIDRaw.(int64)
 			if !ok {
 				return nil, fmt.Errorf("invalid book index for chatID %d", chatID)
 			}
-			books, err := cp.bookStorage.ListBooks(userLang)
+			book, err = cp.bookStorage.GetBookByID(bookID)
 			if err != nil {
-				return nil, fmt.Errorf(`failed to list books: %w`, err)
+				return nil, err
 			}
-			title = books[idxInt]
 		case steps.AskingQuestionMenu:
-			title = cp.bookStorage.GetRandomBookTitle(userLang)
+			book, err = cp.bookStorage.GetRandomBook(booksmeta.WithLanguage(userLang))
+			if err != nil {
+				return nil, err
+			}
+		default:
+			return nil, fmt.Errorf("unknown sequence: %s -> %s", prevStep, currentStep)
 		}
-
-		quote, err := cp.bookStorage.GetRandomSentenceFromBook(title, userLang, seed)
+		bookData, err := cp.booksRepository.LoadBook(book)
 		if err != nil {
 			return nil, err
 		}
-		msg, err := templates.GenerateMessageWithData(templates.QuoteTemplateName, quote, userLang)
+		parser, err := book.GetParser()
+		if err != nil {
+			return nil, err
+		}
+		sentence, err := parser.ParseRandomSentence(bookData, seed)
+		if err != nil {
+			return nil, err
+		}
+
+		msg, err := templates.GenerateMessageWithData(templates.QuoteTemplateName, updateprocessor.Quote{Text: sentence, Book: book}, userLang)
 		if err != nil {
 			return nil, err
 		}
@@ -201,7 +217,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			if err != nil {
 				return nil, err
 			}
-			if err := cp.userDataStorage.SaveUserData(chatID, userdata.BookTitleKey, idx); err != nil {
+			if err := cp.userDataStorage.SaveUserData(chatID, userdata.BookIDKey, idx); err != nil {
 				return nil, err
 			}
 			payload["text"] = templates.SimpleMessages[userLang][templates.TypeQuestionTemplateName]
@@ -209,19 +225,28 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 				return nil, err
 			}
 		case steps.GetRandomSentenceMenu:
-			books, err := cp.bookStorage.ListBooks(userLang)
-			if err != nil {
-				return nil, fmt.Errorf(`failed to list books: %w`, err)
-			}
-			idx, err := strconv.Atoi(callback.Data)
+			bookID, err := strconv.Atoi(callback.Data)
 			if err != nil {
 				return nil, err
 			}
-			quote, err := cp.bookStorage.GetRandomSentenceFromBook(books[idx], userLang, time.Now().UnixNano())
+			book, err := cp.bookStorage.GetBookByID(int64(bookID))
 			if err != nil {
 				return nil, err
 			}
-			msg, err := templates.GenerateMessageWithData(templates.QuoteTemplateName, quote, userLang)
+			bookData, err := cp.booksRepository.LoadBook(book)
+			if err != nil {
+				return nil, err
+			}
+			parser, err := book.GetParser()
+			if err != nil {
+				return nil, err
+			}
+			sentence, err := parser.ParseRandomSentence(bookData, time.Now().UnixNano())
+			if err != nil {
+				return nil, err
+			}
+
+			msg, err := templates.GenerateMessageWithData(templates.QuoteTemplateName, updateprocessor.Quote{Text: sentence, Book: book}, userLang)
 			if err != nil {
 				return nil, err
 			}
@@ -268,11 +293,23 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 				return nil, err
 			}
 		case model.UseRandomBookCommandName:
-			quote, err := cp.bookStorage.GetRandomSentenceFromBook(cp.bookStorage.GetRandomBookTitle(userLang), userLang, time.Now().UnixNano())
+			book, err := cp.bookStorage.GetRandomBook(booksmeta.WithLanguage(userLang))
 			if err != nil {
 				return nil, err
 			}
-			msg, err := templates.GenerateMessageWithData(templates.QuoteTemplateName, quote, userLang)
+			bookData, err := cp.booksRepository.LoadBook(book)
+			if err != nil {
+				return nil, err
+			}
+			parser, err := book.GetParser()
+			if err != nil {
+				return nil, err
+			}
+			sentence, err := parser.ParseRandomSentence(bookData, time.Now().UnixNano())
+			if err != nil {
+				return nil, err
+			}
+			msg, err := templates.GenerateMessageWithData(templates.QuoteTemplateName, updateprocessor.Quote{Text: sentence, Book: book}, userLang)
 			if err != nil {
 				return nil, err
 			}
@@ -316,13 +353,13 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 
 func (cp *UpdateProcessor) generateListBooksMenuPayload(chatID int64, lang config.Language) (map[string]interface{}, error) {
 	var keyboard [][]model.InlineKeyboardButton
-	books, err := cp.bookStorage.ListBooks(lang)
+	books, err := cp.bookStorage.ListBooks(booksmeta.WithLanguage(lang), booksmeta.Ordered())
 	if err != nil {
 		return nil, fmt.Errorf(`failed to list books: %w`, err)
 	}
 	for i, book := range books {
 		button := model.InlineKeyboardButton{
-			Text:         book,
+			Text:         fmt.Sprintf("%s - %s", book.Author, book.Title),
 			CallbackData: model.CallbackCommand(strconv.Itoa(i)),
 		}
 		keyboard = append(keyboard, []model.InlineKeyboardButton{button})

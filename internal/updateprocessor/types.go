@@ -1,15 +1,15 @@
 package updateprocessor
 
 import (
-	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
+	booksmeta "github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
 )
 
 type Quote struct {
-	Text  string
-	Title string
+	Text string
+	Book *booksmeta.Book
 }
 
 type UpdateProcessor interface {
@@ -18,9 +18,13 @@ type UpdateProcessor interface {
 }
 
 type BookStorage interface {
-	GetRandomSentenceFromBook(bookName string, lang config.Language, seed int64) (*Quote, error)
-	ListBooks(lang config.Language) ([]string, error)
-	GetRandomBookTitle(lang config.Language) string
+	GetBookByID(id int64) (*booksmeta.Book, error)
+	ListBooks(options ...booksmeta.ListOption) ([]*booksmeta.Book, error)
+	GetRandomBook(options ...booksmeta.ListOption) (*booksmeta.Book, error)
+}
+
+type BookRepository interface {
+	LoadBook(book *booksmeta.Book) ([]byte, error)
 }
 
 type StepStorage interface {
