@@ -16,6 +16,7 @@ type BooksMetaStorage struct {
 	db *sqlx.DB
 }
 
+// TODO: implement migrations
 func NewStorage(db *sqlx.DB) updateprocessor.BookStorage {
 	return &BooksMetaStorage{db: db}
 }
