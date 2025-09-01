@@ -1,6 +1,8 @@
 package updateprocessor
 
 import (
+	"context"
+
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	booksmeta "github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
@@ -13,14 +15,14 @@ type Quote struct {
 }
 
 type UpdateProcessor interface {
-	ProcessMessage(message *model.Message) (map[string]interface{}, error)
-	ProcessCallback(callback *model.CallbackQuery) (map[string]interface{}, error)
+	ProcessMessage(ctx context.Context, message *model.Message) (map[string]interface{}, error)
+	ProcessCallback(ctx context.Context, callback *model.CallbackQuery) (map[string]interface{}, error)
 }
 
 type BookStorage interface {
-	GetBookByID(id int64) (*booksmeta.Book, error)
-	ListBooks(options ...booksmeta.ListOption) ([]*booksmeta.Book, error)
-	GetRandomBook(options ...booksmeta.ListOption) (*booksmeta.Book, error)
+	GetBookByID(ctx context.Context, id int64) (*booksmeta.Book, error)
+	ListBooks(ctx context.Context, options ...booksmeta.ListOption) ([]*booksmeta.Book, error)
+	GetRandomBook(ctx context.Context, options ...booksmeta.ListOption) (*booksmeta.Book, error)
 }
 
 type BookRepository interface {

@@ -13,6 +13,7 @@ type Config struct {
 	PokingInterval  int      `env:"POKING_INTERVAL" envDefault:"10"`
 	PokingURL       string   `env:"POKING_URL" envDefault:"https://ya.ru"`
 	DefaultLanguage Language `env:"DEFAULT_LANGUAGE" envDefault:"rus"`
+	DatabaseURI     string   `env:"DATABASE_URI"`
 }
 
 func GetConfig() (*Config, error) {

@@ -1,6 +1,8 @@
 package inmemory_test
 
 import (
+	"context"
+
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	booksmeta "github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta/inmemory"
@@ -14,6 +16,7 @@ var _ = Describe("Local storage functions test", func() {
 	var (
 		err         error
 		testStorage = inmemory.Storage
+		ctx         context.Context
 	)
 	BeforeEach(func() {
 		Expect(err).NotTo(HaveOccurred())
@@ -22,7 +25,7 @@ var _ = Describe("Local storage functions test", func() {
 	It("Builds books list", func() {
 		res := 0
 		for lang := range config.SupportedLanguages {
-			booksList, err := testStorage.ListBooks(booksmeta.WithLanguage(lang))
+			booksList, err := testStorage.ListBooks(ctx, booksmeta.WithLanguage(lang))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(booksList).NotTo(BeNil())
 			Expect(len(booksList)).To(BeNumerically(">", 0))
@@ -32,13 +35,13 @@ var _ = Describe("Local storage functions test", func() {
 	})
 
 	It("Takes random book from storage", func() {
-		book, err := testStorage.GetRandomBook()
+		book, err := testStorage.GetRandomBook(ctx)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(book).NotTo(BeNil())
 	})
 
 	It("Takes specific book from storage", func() {
-		book, err := testStorage.GetBookByID(testID)
+		book, err := testStorage.GetBookByID(ctx, testID)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(book).NotTo(BeNil())
 		Expect(book.Title).To(Equal("Трое в лодке, не считая собаки"))

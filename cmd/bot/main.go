@@ -9,11 +9,11 @@ import (
 	"github.com/mrkovshik/fortune_teller_bot/api/rest"
 	"github.com/mrkovshik/fortune_teller_bot/internal/books-repository/embedded"
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
-	_ "github.com/mrkovshik/fortune_teller_bot/internal/embedded/templates"
 	"github.com/mrkovshik/fortune_teller_bot/internal/poker"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta/inmemory"
 	inmemorystep "github.com/mrkovshik/fortune_teller_bot/internal/storage/steps/inmemory"
 	inmemoryuserdata "github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata/inmemory"
+	_ "github.com/mrkovshik/fortune_teller_bot/internal/templates"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor/basic"
 	"go.uber.org/zap"
 )

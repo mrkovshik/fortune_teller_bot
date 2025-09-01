@@ -1,6 +1,7 @@
 package inmemory
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"sort"
@@ -88,7 +89,7 @@ var Storage = BooksMetaStorage{
 	},
 }
 
-func (s BooksMetaStorage) GetBookByID(id int64) (*booksmeta.Book, error) {
+func (s BooksMetaStorage) GetBookByID(_ context.Context, id int64) (*booksmeta.Book, error) {
 	book, ok := s[id]
 	if !ok {
 		return nil, fmt.Errorf("book id %d not found", id)
@@ -96,8 +97,8 @@ func (s BooksMetaStorage) GetBookByID(id int64) (*booksmeta.Book, error) {
 	return book, nil
 }
 
-func (s BooksMetaStorage) GetRandomBook(options ...booksmeta.ListOption) (*booksmeta.Book, error) {
-	booksList, err := s.ListBooks(options...)
+func (s BooksMetaStorage) GetRandomBook(ctx context.Context, options ...booksmeta.ListOption) (*booksmeta.Book, error) {
+	booksList, err := s.ListBooks(ctx, options...)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +107,7 @@ func (s BooksMetaStorage) GetRandomBook(options ...booksmeta.ListOption) (*books
 	return booksList[idx], nil
 }
 
-func (s BooksMetaStorage) ListBooks(options ...booksmeta.ListOption) ([]*booksmeta.Book, error) {
+func (s BooksMetaStorage) ListBooks(_ context.Context, options ...booksmeta.ListOption) ([]*booksmeta.Book, error) {
 	var opts booksmeta.ListOptions
 	for _, opt := range options {
 		opt(&opts)

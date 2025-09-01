@@ -1,6 +1,7 @@
 package basic_test
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/golang/mock/gomock"
@@ -32,6 +33,7 @@ const (
 var _ = Describe("Local bookStorage functions test", func() {
 	var (
 		logger           *zap.Logger
+		ctx              context.Context
 		ctrl             *gomock.Controller
 		bookStorage      *mock.MockBookStorage
 		bookRepository   *mock.MockBookRepository
@@ -85,12 +87,12 @@ var _ = Describe("Local bookStorage functions test", func() {
 		stepStorage.EXPECT().Clear(testChatID)
 
 		bookStorage.EXPECT().
-			GetBookByID(testBook1Id).
+			GetBookByID(gomock.Any(), testBook1Id).
 			Return(testBook1, nil)
 
 		bookRepository.EXPECT().LoadBook(testBook1).Return(testdata.TestBookBytes, nil)
 
-		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
+		reply, err := testProcessor.ProcessCallback(ctx, &model.CallbackQuery{
 			ID: "123",
 			From: &model.User{
 				ID: testChatID,
@@ -112,12 +114,12 @@ var _ = Describe("Local bookStorage functions test", func() {
 		stepStorage.EXPECT().Clear(testChatID)
 
 		bookStorage.EXPECT().
-			GetBookByID(testBook1Id).
+			GetBookByID(gomock.Any(), testBook1Id).
 			Return(testBook1, nil)
 
 		bookRepository.EXPECT().LoadBook(testBook1).Return(testdata.TestBookBytes, nil)
 
-		reply, err := testProcessor.ProcessMessage(&model.Message{
+		reply, err := testProcessor.ProcessMessage(ctx, &model.Message{
 			Chat: model.Chat{
 				ID: testChatID,
 			},
@@ -136,7 +138,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 
 		bookStorage.EXPECT().ListBooks(gomock.Any(), gomock.Any()).Return([]*booksmeta.Book{testBook1, testBook2}, nil)
 
-		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
+		reply, err := testProcessor.ProcessCallback(ctx, &model.CallbackQuery{
 			ID: "123",
 			From: &model.User{
 				ID: testChatID,
@@ -157,7 +159,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 		stepStorage.EXPECT().Peek(testChatID).Return(steps.SelectStartCommand, nil)
 		stepStorage.EXPECT().Push(testChatID, steps.SelectLanguage).Return(nil)
 
-		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
+		reply, err := testProcessor.ProcessCallback(ctx, &model.CallbackQuery{
 			ID: "123",
 			From: &model.User{
 				ID: testChatID,
@@ -186,7 +188,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 		stepStorage.EXPECT().Clear(testChatID)
 		userDataStorage.EXPECT().SaveUserData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
-		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
+		reply, err := testProcessor.ProcessCallback(ctx, &model.CallbackQuery{
 			ID: "123",
 			From: &model.User{
 				ID: testChatID,
@@ -203,7 +205,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 		stepStorage.EXPECT().Peek(testChatID).Return(steps.SelectStartCommand, nil)
 		stepStorage.EXPECT().Push(testChatID, steps.AskingQuestionMenu).Return(nil)
 
-		reply, err := testProcessor.ProcessCallback(&model.CallbackQuery{
+		reply, err := testProcessor.ProcessCallback(ctx, &model.CallbackQuery{
 			ID: "123",
 			From: &model.User{
 				ID: testChatID,

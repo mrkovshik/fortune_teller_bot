@@ -1,17 +1,18 @@
 package basic
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
-	"github.com/mrkovshik/fortune_teller_bot/internal/embedded/templates"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	booksmeta "github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
+	"github.com/mrkovshik/fortune_teller_bot/internal/templates"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
 	"go.uber.org/zap"
 )
@@ -41,7 +42,7 @@ func NewUpdateProcessor(bookStorage updateprocessor.BookStorage,
 	}
 }
 
-func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]interface{}, error) {
+func (cp *UpdateProcessor) ProcessMessage(ctx context.Context, message *model.Message) (map[string]interface{}, error) {
 	chatID := message.Chat.ID
 	userData, err := cp.userDataStorage.GetUserData(chatID)
 	if err != nil {
@@ -93,12 +94,12 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 			if !ok {
 				return nil, fmt.Errorf("invalid book index for chatID %d", chatID)
 			}
-			book, err = cp.bookStorage.GetBookByID(bookID)
+			book, err = cp.bookStorage.GetBookByID(ctx, bookID)
 			if err != nil {
 				return nil, err
 			}
 		case steps.AskingQuestionMenu:
-			book, err = cp.bookStorage.GetRandomBook(booksmeta.WithLanguage(userLang))
+			book, err = cp.bookStorage.GetRandomBook(ctx, booksmeta.WithLanguage(userLang))
 			if err != nil {
 				return nil, err
 			}
@@ -136,7 +137,7 @@ func (cp *UpdateProcessor) ProcessMessage(message *model.Message) (map[string]in
 	return payload, nil
 }
 
-func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[string]interface{}, error) {
+func (cp *UpdateProcessor) ProcessCallback(ctx context.Context, callback *model.CallbackQuery) (map[string]interface{}, error) {
 	chatID := callback.From.ID
 	userData, err := cp.userDataStorage.GetUserData(chatID)
 	if err != nil {
@@ -229,7 +230,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 			if err != nil {
 				return nil, err
 			}
-			book, err := cp.bookStorage.GetBookByID(int64(bookID))
+			book, err := cp.bookStorage.GetBookByID(ctx, int64(bookID))
 			if err != nil {
 				return nil, err
 			}
@@ -263,7 +264,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	case steps.AskingQuestionMenu:
 		switch command {
 		case model.ListBooksCommandName:
-			payload, err = cp.generateListBooksMenuPayload(chatID, userLang)
+			payload, err = cp.generateListBooksMenuPayload(ctx, chatID, userLang)
 			if err != nil {
 				return nil, err
 			}
@@ -285,7 +286,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	case steps.GetRandomSentenceMenu:
 		switch command {
 		case model.ListBooksCommandName:
-			payload, err = cp.generateListBooksMenuPayload(chatID, userLang)
+			payload, err = cp.generateListBooksMenuPayload(ctx, chatID, userLang)
 			if err != nil {
 				return nil, err
 			}
@@ -293,7 +294,7 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 				return nil, err
 			}
 		case model.UseRandomBookCommandName:
-			book, err := cp.bookStorage.GetRandomBook(booksmeta.WithLanguage(userLang))
+			book, err := cp.bookStorage.GetRandomBook(ctx, booksmeta.WithLanguage(userLang))
 			if err != nil {
 				return nil, err
 			}
@@ -351,9 +352,9 @@ func (cp *UpdateProcessor) ProcessCallback(callback *model.CallbackQuery) (map[s
 	return payload, nil
 }
 
-func (cp *UpdateProcessor) generateListBooksMenuPayload(chatID int64, lang config.Language) (map[string]interface{}, error) {
+func (cp *UpdateProcessor) generateListBooksMenuPayload(ctx context.Context, chatID int64, lang config.Language) (map[string]interface{}, error) {
 	var keyboard [][]model.InlineKeyboardButton
-	books, err := cp.bookStorage.ListBooks(booksmeta.WithLanguage(lang), booksmeta.Ordered())
+	books, err := cp.bookStorage.ListBooks(ctx, booksmeta.WithLanguage(lang), booksmeta.Ordered())
 	if err != nil {
 		return nil, fmt.Errorf(`failed to list books: %w`, err)
 	}

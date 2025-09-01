@@ -6,11 +6,11 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-gonic/gin v1.10.1
 	github.com/golang/mock v1.6.0
+	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
 	github.com/mrkovshik/yandex_diploma v0.0.0-20240519070422-9f19b4de67ee
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.38.0
-	github.com/samber/lo v1.51.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.41.0
 )

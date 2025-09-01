@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
-	"github.com/mrkovshik/fortune_teller_bot/internal/embedded/templates"
+	"github.com/mrkovshik/fortune_teller_bot/internal/templates"
 )
 
 type InlineKeyboardMarkup struct {

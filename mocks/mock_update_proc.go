@@ -5,6 +5,7 @@
 package mock
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -35,31 +36,31 @@ func (m *MockUpdateProcessor) EXPECT() *MockUpdateProcessorMockRecorder {
 }
 
 // ProcessCallback mocks base method.
-func (m *MockUpdateProcessor) ProcessCallback(arg0 *model.CallbackQuery) (map[string]interface{}, error) {
+func (m *MockUpdateProcessor) ProcessCallback(arg0 context.Context, arg1 *model.CallbackQuery) (map[string]interface{}, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ProcessCallback", arg0)
+	ret := m.ctrl.Call(m, "ProcessCallback", arg0, arg1)
 	ret0, _ := ret[0].(map[string]interface{})
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ProcessCallback indicates an expected call of ProcessCallback.
-func (mr *MockUpdateProcessorMockRecorder) ProcessCallback(arg0 interface{}) *gomock.Call {
+func (mr *MockUpdateProcessorMockRecorder) ProcessCallback(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessCallback", reflect.TypeOf((*MockUpdateProcessor)(nil).ProcessCallback), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessCallback", reflect.TypeOf((*MockUpdateProcessor)(nil).ProcessCallback), arg0, arg1)
 }
 
 // ProcessMessage mocks base method.
-func (m *MockUpdateProcessor) ProcessMessage(arg0 *model.Message) (map[string]interface{}, error) {
+func (m *MockUpdateProcessor) ProcessMessage(arg0 context.Context, arg1 *model.Message) (map[string]interface{}, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ProcessMessage", arg0)
+	ret := m.ctrl.Call(m, "ProcessMessage", arg0, arg1)
 	ret0, _ := ret[0].(map[string]interface{})
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ProcessMessage indicates an expected call of ProcessMessage.
-func (mr *MockUpdateProcessorMockRecorder) ProcessMessage(arg0 interface{}) *gomock.Call {
+func (mr *MockUpdateProcessorMockRecorder) ProcessMessage(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessMessage", reflect.TypeOf((*MockUpdateProcessor)(nil).ProcessMessage), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessMessage", reflect.TypeOf((*MockUpdateProcessor)(nil).ProcessMessage), arg0, arg1)
 }
