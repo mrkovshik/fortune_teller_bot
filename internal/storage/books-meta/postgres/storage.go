@@ -29,7 +29,7 @@ func NewStorage(cfg *config.Config) (updateprocessor.BookStorage, error) {
 		return nil, err
 	}
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://migrations",
+		"file://db/migrations",
 		"postgres", driver)
 	if err != nil {
 		return nil, err
