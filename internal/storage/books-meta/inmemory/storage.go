@@ -138,3 +138,13 @@ func (s BooksMetaStorage) ListBooks(_ context.Context, options ...booksmeta.List
 	}
 	return result, nil
 }
+
+func (s BooksMetaStorage) AddBook(ctx context.Context, book *booksmeta.Book) error {
+	booksList, err := s.ListBooks(ctx, booksmeta.Ordered())
+	if err != nil {
+		return err
+	}
+	book.ID = booksList[len(booksList)-1].ID + 1
+	Storage[book.ID] = book
+	return nil
+}

@@ -14,11 +14,11 @@ type TextParser interface {
 }
 
 type Book struct {
-	ID       int64             `json:"id"`
-	Title    string            `json:"title"`
-	Author   string            `json:"author"`
-	Language config.Language   `json:"language"`
-	Format   textparser.Format `json:"format"`
+	ID       int64             `json:"id" db:"id"`
+	Title    string            `json:"title" db:"title"`
+	Author   string            `json:"author" db:"author"`
+	Language config.Language   `json:"language" db:"lang"`
+	Format   textparser.Format `json:"format" db:"format"`
 }
 
 func (b Book) GetParser() (TextParser, error) {

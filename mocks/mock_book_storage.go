@@ -35,6 +35,20 @@ func (m *MockBookStorage) EXPECT() *MockBookStorageMockRecorder {
 	return m.recorder
 }
 
+// AddBook mocks base method.
+func (m *MockBookStorage) AddBook(arg0 context.Context, arg1 *booksmeta.Book) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddBook", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddBook indicates an expected call of AddBook.
+func (mr *MockBookStorageMockRecorder) AddBook(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddBook", reflect.TypeOf((*MockBookStorage)(nil).AddBook), arg0, arg1)
+}
+
 // GetBookByID mocks base method.
 func (m *MockBookStorage) GetBookByID(arg0 context.Context, arg1 int64) (*booksmeta.Book, error) {
 	m.ctrl.T.Helper()

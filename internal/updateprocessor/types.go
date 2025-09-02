@@ -23,6 +23,7 @@ type BookStorage interface {
 	GetBookByID(ctx context.Context, id int64) (*booksmeta.Book, error)
 	ListBooks(ctx context.Context, options ...booksmeta.ListOption) ([]*booksmeta.Book, error)
 	GetRandomBook(ctx context.Context, options ...booksmeta.ListOption) (*booksmeta.Book, error)
+	AddBook(ctx context.Context, book *booksmeta.Book) error
 }
 
 type BookRepository interface {

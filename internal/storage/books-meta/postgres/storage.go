@@ -9,7 +9,9 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jmoiron/sqlx"
+	"github.com/mrkovshik/fortune_teller_bot/db"
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	booksmeta "github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
@@ -20,29 +22,44 @@ type BooksMetaStorage struct {
 }
 
 func NewStorage(cfg *config.Config) (updateprocessor.BookStorage, error) {
-	db, err := sqlx.Connect("postgres", cfg.DatabaseURI)
+	dataBase, err := sqlx.Connect("postgres", cfg.DatabaseURI)
 	if err != nil {
 		return nil, err
 	}
-	driver, err := postgres.WithInstance(db.DB, &postgres.Config{})
+
+	driver, err := postgres.WithInstance(dataBase.DB, &postgres.Config{})
 	if err != nil {
 		return nil, err
 	}
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://db/migrations",
-		"postgres", driver)
+
+	src, err := iofs.New(db.MigrationsFS, "migrations")
 	if err != nil {
 		return nil, err
 	}
-	if err := m.Up(); err != nil {
+
+	m, err := migrate.NewWithInstance("iofs", src, "postgres", driver)
+	if err != nil {
 		return nil, err
 	}
-	return &BooksMetaStorage{db: db}, nil
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return nil, err
+	}
+
+	return &BooksMetaStorage{db: dataBase}, nil
 }
 
 func (s BooksMetaStorage) GetBookByID(ctx context.Context, id int64) (book *booksmeta.Book, err error) {
-	err = s.db.GetContext(ctx, &book, "SELECT * FROM books WHERE id=$1", id)
+	book = &booksmeta.Book{}
+	err = s.db.GetContext(ctx, book, "SELECT * FROM books WHERE id=$1", id)
 	return
+}
+
+func (s BooksMetaStorage) AddBook(ctx context.Context, book *booksmeta.Book) error {
+	if _, err := s.db.ExecContext(ctx, "INSERT INTO books (title, author, format, lang) VALUES ($1, $2, $3, $4)", book.Title, book.Author, book.Format, book.Language); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s BooksMetaStorage) GetRandomBook(ctx context.Context, options ...booksmeta.ListOption) (book *booksmeta.Book, err error) {
