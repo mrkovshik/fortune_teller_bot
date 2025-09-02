@@ -358,10 +358,10 @@ func (cp *UpdateProcessor) generateListBooksMenuPayload(ctx context.Context, cha
 	if err != nil {
 		return nil, fmt.Errorf(`failed to list books: %w`, err)
 	}
-	for i, book := range books {
+	for _, book := range books {
 		button := model.InlineKeyboardButton{
 			Text:         fmt.Sprintf("%s - %s", book.Author, book.Title),
-			CallbackData: model.CallbackCommand(strconv.Itoa(i)),
+			CallbackData: model.CallbackCommand(strconv.Itoa(int(book.ID))),
 		}
 		keyboard = append(keyboard, []model.InlineKeyboardButton{button})
 	}
