@@ -218,7 +218,7 @@ func (cp *UpdateProcessor) ProcessCallback(ctx context.Context, callback *model.
 			if err != nil {
 				return nil, err
 			}
-			if err := cp.userDataStorage.SaveUserData(chatID, userdata.BookIDKey, idx); err != nil {
+			if err := cp.userDataStorage.SaveUserData(chatID, userdata.BookIDKey, int64(idx)); err != nil {
 				return nil, err
 			}
 			payload["text"] = templates.SimpleMessages[userLang][templates.TypeQuestionTemplateName]
