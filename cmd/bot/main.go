@@ -5,7 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/jmoiron/sqlx"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/mrkovshik/fortune_teller_bot/api/rest"
@@ -13,7 +14,7 @@ import (
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/poker"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta/inmemory"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta/postgres"
+	postgresStorage "github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta/postgres"
 	inmemorystep "github.com/mrkovshik/fortune_teller_bot/internal/storage/steps/inmemory"
 	inmemoryuserdata "github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata/inmemory"
 	_ "github.com/mrkovshik/fortune_teller_bot/internal/templates"
@@ -42,11 +43,10 @@ func main() {
 	var bookStorage updateprocessor.BookStorage
 	bookStorage = inmemory.Storage
 	if cfg.DatabaseURI != "" {
-		db, err := sqlx.Connect("postgres", cfg.DatabaseURI)
+		bookStorage, err = postgresStorage.NewStorage(cfg)
 		if err != nil {
-			log.Fatal(err)
+			sugaredLogger.Fatal("can't init postgres storage", zap.Error(err))
 		}
-		bookStorage = postgres.NewStorage(db)
 	}
 	stateStorage := inmemorystep.NewStepStorage()
 	userDataStorage := inmemoryuserdata.NewUserDataStorage()

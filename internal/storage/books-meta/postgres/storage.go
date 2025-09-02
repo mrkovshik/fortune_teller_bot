@@ -7,7 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/jmoiron/sqlx"
+	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	booksmeta "github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
 )
@@ -16,9 +19,22 @@ type BooksMetaStorage struct {
 	db *sqlx.DB
 }
 
-// TODO: implement migrations
-func NewStorage(db *sqlx.DB) updateprocessor.BookStorage {
-	return &BooksMetaStorage{db: db}
+func NewStorage(cfg *config.Config) (updateprocessor.BookStorage, error) {
+	db, err := sqlx.Connect("postgres", cfg.DatabaseURI)
+	if err != nil {
+		return nil, err
+	}
+	driver, err := postgres.WithInstance(db.DB, &postgres.Config{})
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://migrations",
+		"postgres", driver)
+	if err != nil {
+		return nil, err
+	}
+	if err := m.Up(); err != nil {
+		return nil, err
+	}
+	return &BooksMetaStorage{db: db}, nil
 }
 
 func (s BooksMetaStorage) GetBookByID(ctx context.Context, id int64) (book *booksmeta.Book, err error) {
@@ -49,7 +65,7 @@ func prepareListQuery(options ...booksmeta.ListOption) (string, []any) {
 	}
 
 	sb := strings.Builder{}
-	sb.WriteString(`SELECT id, title, author, language, format FROM books`)
+	sb.WriteString(`SELECT id, title, author, lang, format FROM books`)
 
 	var (
 		conds []string
