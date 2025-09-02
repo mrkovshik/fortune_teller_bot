@@ -12,7 +12,7 @@ const testID = 1
 var _ = Describe("Posgres DB storage", func() {
 	It("Prepares list query", func() {
 		query, args := prepareListQuery(booksmeta.WithLanguage(config.Russian), booksmeta.WithAuthor("test author"))
-		Expect(query).To(Equal("SELECT id, title, author, language, format FROM books WHERE author ILIKE $1 AND language = $2"))
+		Expect(query).To(Equal("SELECT id, title, author, lang, format FROM books WHERE author ILIKE $1 AND lang = $2"))
 		Expect(args).To(ContainElements("%test author%", config.Russian))
 	})
 })

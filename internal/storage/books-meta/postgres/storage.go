@@ -25,6 +25,9 @@ func NewStorage(cfg *config.Config) (updateprocessor.BookStorage, error) {
 		return nil, err
 	}
 	driver, err := postgres.WithInstance(db.DB, &postgres.Config{})
+	if err != nil {
+		return nil, err
+	}
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://migrations",
 		"postgres", driver)
@@ -89,7 +92,7 @@ func prepareListQuery(options ...booksmeta.ListOption) (string, []any) {
 		n++
 	}
 	if opts.Language != nil {
-		conds = append(conds, fmt.Sprintf(`language = $%d`, n))
+		conds = append(conds, fmt.Sprintf(`lang = $%d`, n))
 		args = append(args, *opts.Language)
 	}
 
