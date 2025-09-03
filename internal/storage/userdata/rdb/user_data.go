@@ -2,6 +2,7 @@ package rdb
 
 import (
 	"context"
+	"errors"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
@@ -36,6 +37,9 @@ func NewUserDataStorage(ctx context.Context, cfg *config.RDB) (*UserDataStorage,
 func (s UserDataStorage) GetBookID(ctx context.Context, chatID int64) (int64, error) {
 	resp := s.rdb.Get(ctx, userdata.GenerateKey(chatID, userdata.BookIDKey))
 	if resp.Err() != nil {
+		if errors.Is(resp.Err(), redis.Nil) {
+			return 0, userdata.ErrNotFound
+		}
 		return 0, resp.Err()
 	}
 	return resp.Int64()
@@ -44,6 +48,9 @@ func (s UserDataStorage) GetBookID(ctx context.Context, chatID int64) (int64, er
 func (s UserDataStorage) GetLanguage(ctx context.Context, chatID int64) (config.Language, error) {
 	resp := s.rdb.Get(ctx, userdata.GenerateKey(chatID, userdata.LanguageKey))
 	if resp.Err() != nil {
+		if errors.Is(resp.Err(), redis.Nil) {
+			return "", userdata.ErrNotFound
+		}
 		return "", resp.Err()
 	}
 	return config.Language(resp.Val()), nil
