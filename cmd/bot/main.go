@@ -17,6 +17,7 @@ import (
 	postgresStorage "github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta/postgres"
 	inmemorystep "github.com/mrkovshik/fortune_teller_bot/internal/storage/steps/inmemory"
 	inmemoryuserdata "github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata/inmemory"
+	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata/rdb"
 	_ "github.com/mrkovshik/fortune_teller_bot/internal/templates"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor/basic"
@@ -24,6 +25,7 @@ import (
 )
 
 func main() {
+	ctx := context.TODO()
 	_ = godotenv.Load()
 	cfg, err := config.GetConfig()
 	if err != nil {
@@ -41,15 +43,30 @@ func main() {
 	}(logger)
 	sugaredLogger := logger.Sugar()
 	var bookStorage updateprocessor.BookStorage
-	bookStorage = inmemory.Storage
+
 	if cfg.DatabaseURI != "" {
 		bookStorage, err = postgresStorage.NewStorage(cfg)
 		if err != nil {
-			sugaredLogger.Fatal("can't init postgres storage", zap.Error(err))
+			sugaredLogger.Fatal("can't init postgres books meta storage", zap.Error(err))
 		}
+		sugaredLogger.Debug("init postgres books meta storage")
+	} else {
+		bookStorage = inmemory.Storage
+		sugaredLogger.Debug("init inmemory books meta storage")
 	}
 	stateStorage := inmemorystep.NewStepStorage()
-	userDataStorage := inmemoryuserdata.NewUserDataStorage()
+	var userDataStorage updateprocessor.UserDataStorage
+
+	if cfg.RDB != nil {
+		userDataStorage, err = rdb.NewUserDataStorage(ctx, cfg.RDB)
+		if err != nil {
+			sugaredLogger.Fatal("can't init rdb user data storage", zap.Error(err))
+		}
+		sugaredLogger.Debug("init rdb user data storage")
+	} else {
+		userDataStorage = inmemoryuserdata.NewUserDataStorage()
+		sugaredLogger.Debug("init inmemory user data storage")
+	}
 	booksRepository := embedded.NewRepository()
 	commandProcessor := basic.NewUpdateProcessor(bookStorage, booksRepository, stateStorage, userDataStorage, sugaredLogger, cfg)
 	server := rest.NewRestAPIServer(commandProcessor, cfg, sugaredLogger)

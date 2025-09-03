@@ -34,11 +34,19 @@ func NewUserDataStorage(ctx context.Context, cfg *config.RDB) (*UserDataStorage,
 }
 
 func (s UserDataStorage) GetBookID(ctx context.Context, chatID int64) (int64, error) {
-	return s.rdb.Get(ctx, userdata.GenerateKey(chatID, userdata.BookIDKey)).Int64()
+	resp := s.rdb.Get(ctx, userdata.GenerateKey(chatID, userdata.BookIDKey))
+	if resp.Err() != nil {
+		return 0, resp.Err()
+	}
+	return resp.Int64()
 }
 
 func (s UserDataStorage) GetLanguage(ctx context.Context, chatID int64) (config.Language, error) {
-	return config.Language(s.rdb.Get(ctx, userdata.GenerateKey(chatID, userdata.LanguageKey)).String()), nil
+	resp := s.rdb.Get(ctx, userdata.GenerateKey(chatID, userdata.LanguageKey))
+	if resp.Err() != nil {
+		return "", resp.Err()
+	}
+	return config.Language(resp.Val()), nil
 }
 
 func (s UserDataStorage) SaveBookID(ctx context.Context, chatID, bookID int64) error {
@@ -46,5 +54,5 @@ func (s UserDataStorage) SaveBookID(ctx context.Context, chatID, bookID int64) e
 }
 
 func (s UserDataStorage) SaveLanguage(ctx context.Context, chatID int64, language config.Language) error {
-	return s.rdb.Set(ctx, userdata.GenerateKey(chatID, userdata.LanguageKey), language, 0).Err()
+	return s.rdb.Set(ctx, userdata.GenerateKey(chatID, userdata.LanguageKey), string(language), 0).Err()
 }

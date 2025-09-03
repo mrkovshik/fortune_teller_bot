@@ -16,7 +16,7 @@ type (
 		PokingURL       string   `env:"POKING_URL" envDefault:"https://ya.ru"`
 		DefaultLanguage Language `env:"DEFAULT_LANGUAGE" envDefault:"rus"`
 		DatabaseURI     string   `env:"DATABASE_URI"`
-		RDB             *RDB     `env:"RDB"`
+		RDB             *RDB
 	}
 	RDB struct {
 		Addr         string        `env:"RDB_ADDRESS"`
@@ -29,12 +29,19 @@ type (
 )
 
 func GetConfig() (*Config, error) {
+	var rdb RDB
 	cfg := &Config{}
 	if err := env.Parse(cfg); err != nil { //nolint:typecheck
 		return nil, err
 	}
 	if err := cfg.validate(); err != nil {
 		return nil, err
+	}
+	if err := env.Parse(&rdb); err != nil {
+		return nil, err
+	}
+	if rdb.Addr != "" {
+		cfg.RDB = &rdb
 	}
 	return cfg, nil
 }
