@@ -7,7 +7,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	booksmeta "github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
 	"github.com/mrkovshik/fortune_teller_bot/internal/textparser"
 	"github.com/mrkovshik/fortune_teller_bot/internal/updateprocessor/basic/testdata"
 
@@ -70,10 +69,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 		Expect(err).NotTo(HaveOccurred())
 		testProcessor = basic.NewUpdateProcessor(bookStorage, bookRepository, stepStorage, userDataStorage, logger.Sugar(), cfg)
 		Expect(err).NotTo(HaveOccurred())
-		userDataStorage.EXPECT().GetUserData(testChatID).Return(userdata.UserData{
-			userdata.LanguageKey: config.Russian,
-			userdata.BookIDKey:   testBook1Id,
-		}, nil).AnyTimes()
+		userDataStorage.EXPECT().GetLanguage(ctx, testChatID).Return(config.Russian, nil).AnyTimes()
 
 	})
 	AfterEach(func() {
@@ -107,6 +103,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 	})
 
 	It("Takes answer from specific book", func() {
+		userDataStorage.EXPECT().GetBookID(ctx, testChatID).Return(testBook1Id, nil)
 
 		stepStorage.EXPECT().Peek(testChatID).Return(steps.AskingQuestion, nil)
 		stepStorage.EXPECT().PeekPrevious(testChatID).Return(steps.SelectBook, nil)
@@ -186,7 +183,7 @@ var _ = Describe("Local bookStorage functions test", func() {
 		stepStorage.EXPECT().Push(testChatID, steps.SelectStartCommand).Return(nil)
 		stepStorage.EXPECT().Peek(testChatID).Return(steps.SelectLanguage, nil)
 		stepStorage.EXPECT().Clear(testChatID)
-		userDataStorage.EXPECT().SaveUserData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+		userDataStorage.EXPECT().SaveLanguage(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 		reply, err := testProcessor.ProcessCallback(ctx, &model.CallbackQuery{
 			ID: "123",

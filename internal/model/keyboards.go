@@ -67,3 +67,7 @@ func init() {
 		}
 	}
 }
+
+func (c CallbackCommand) String() string {
+	return string(c)
+}

@@ -2,19 +2,31 @@ package config
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/caarlos0/env/v6"
 )
 
-type Config struct {
-	Port            string   `env:"PORT" envDefault:"8080"`
-	Host            string   `env:"HOST" envDefault:""`
-	Token           string   `env:"TELEGRAM_TOKEN"`
-	PokingInterval  int      `env:"POKING_INTERVAL" envDefault:"10000"`
-	PokingURL       string   `env:"POKING_URL" envDefault:"https://ya.ru"`
-	DefaultLanguage Language `env:"DEFAULT_LANGUAGE" envDefault:"rus"`
-	DatabaseURI     string   `env:"DATABASE_URI"`
-}
+type (
+	Config struct {
+		Port            string   `env:"PORT" envDefault:"8080"`
+		Host            string   `env:"HOST" envDefault:""`
+		Token           string   `env:"TELEGRAM_TOKEN"`
+		PokingInterval  int      `env:"POKING_INTERVAL" envDefault:"10000"`
+		PokingURL       string   `env:"POKING_URL" envDefault:"https://ya.ru"`
+		DefaultLanguage Language `env:"DEFAULT_LANGUAGE" envDefault:"rus"`
+		DatabaseURI     string   `env:"DATABASE_URI"`
+		RDB             *RDB     `env:"RDB"`
+	}
+	RDB struct {
+		Addr         string        `env:"RDB_ADDRESS"`
+		Password     string        `env:"RDB_PASSWORD"`
+		DB           int           `env:"RDB_DB"`
+		DialTimeout  time.Duration `env:"RDB_DIAL_TIMEOUT" envDefault:"5s"`
+		ReadTimeout  time.Duration `env:"RDB_READ_TIMEOUT" envDefault:"5s"`
+		WriteTimeout time.Duration `env:"RDB_WRITE_TIMEOUT" envDefault:"5s"`
+	}
+)
 
 func GetConfig() (*Config, error) {
 	cfg := &Config{}

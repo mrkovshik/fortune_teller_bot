@@ -44,21 +44,14 @@ func NewUpdateProcessor(bookStorage updateprocessor.BookStorage,
 
 func (cp *UpdateProcessor) ProcessMessage(ctx context.Context, message *model.Message) (map[string]interface{}, error) {
 	chatID := message.Chat.ID
-	userData, err := cp.userDataStorage.GetUserData(chatID)
+	userLang, err := cp.userDataStorage.GetLanguage(ctx, chatID)
 	if err != nil {
-		return nil, err
-	}
-	var userLang config.Language
-	userLangRaw, ok := userData[userdata.LanguageKey]
-	if !ok {
-		userLang = cp.cfg.DefaultLanguage
-	} else {
-		userLang, ok = userLangRaw.(config.Language)
-		if !ok {
-			return nil, fmt.Errorf("user language value is not a string")
+		if errors.Is(err, userdata.ErrNotFound) {
+			userLang = cp.cfg.DefaultLanguage
+		} else {
+			return nil, err
 		}
 	}
-
 	command := message.Text
 	payload := map[string]interface{}{
 		"chat_id": chatID,
@@ -86,13 +79,9 @@ func (cp *UpdateProcessor) ProcessMessage(ctx context.Context, message *model.Me
 		var book *booksmeta.Book
 		switch prevStep {
 		case steps.SelectBook:
-			bookIDRaw, ok := userData[userdata.BookIDKey]
-			if !ok {
-				return nil, fmt.Errorf("no id key found in userData for chatID %d", chatID)
-			}
-			bookID, ok := bookIDRaw.(int64)
-			if !ok {
-				return nil, fmt.Errorf("invalid book index for chatID %d", chatID)
+			bookID, err := cp.userDataStorage.GetBookID(ctx, chatID)
+			if err != nil {
+				return nil, fmt.Errorf("get book id from userdata storage: %w", err)
 			}
 			book, err = cp.bookStorage.GetBookByID(ctx, bookID)
 			if err != nil {
@@ -139,18 +128,12 @@ func (cp *UpdateProcessor) ProcessMessage(ctx context.Context, message *model.Me
 
 func (cp *UpdateProcessor) ProcessCallback(ctx context.Context, callback *model.CallbackQuery) (map[string]interface{}, error) {
 	chatID := callback.From.ID
-	userData, err := cp.userDataStorage.GetUserData(chatID)
+	userLang, err := cp.userDataStorage.GetLanguage(ctx, chatID)
 	if err != nil {
-		return nil, err
-	}
-	var userLang config.Language
-	userLangRaw, ok := userData[userdata.LanguageKey]
-	if !ok {
-		userLang = cp.cfg.DefaultLanguage
-	} else {
-		userLang, ok = userLangRaw.(config.Language)
-		if !ok {
-			return nil, fmt.Errorf("user language value is not a string")
+		if errors.Is(err, userdata.ErrNotFound) {
+			userLang = cp.cfg.DefaultLanguage
+		} else {
+			return nil, err
 		}
 	}
 
@@ -214,11 +197,11 @@ func (cp *UpdateProcessor) ProcessCallback(ctx context.Context, callback *model.
 		}
 		switch prevStep {
 		case steps.AskingQuestionMenu:
-			idx, err := strconv.Atoi(string(command))
+			bookID, err := strconv.ParseInt(string(command), 10, 64)
 			if err != nil {
 				return nil, err
 			}
-			if err := cp.userDataStorage.SaveUserData(chatID, userdata.BookIDKey, int64(idx)); err != nil {
+			if err := cp.userDataStorage.SaveBookID(ctx, chatID, bookID); err != nil {
 				return nil, err
 			}
 			payload["text"] = templates.SimpleMessages[userLang][templates.TypeQuestionTemplateName]
@@ -329,7 +312,7 @@ func (cp *UpdateProcessor) ProcessCallback(ctx context.Context, callback *model.
 		}
 	case steps.SelectLanguage:
 		userLang = config.Language(command)
-		if err := cp.userDataStorage.SaveUserData(chatID, userdata.LanguageKey, userLang); err != nil {
+		if err := cp.userDataStorage.SaveLanguage(ctx, chatID, userLang); err != nil {
 			return nil, err
 		}
 		languageName, exist := config.SupportedLanguages[userLang]

@@ -3,10 +3,10 @@ package updateprocessor
 import (
 	"context"
 
+	"github.com/mrkovshik/fortune_teller_bot/internal/config"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
 	booksmeta "github.com/mrkovshik/fortune_teller_bot/internal/storage/books-meta"
 	"github.com/mrkovshik/fortune_teller_bot/internal/storage/steps"
-	"github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
 )
 
 type Quote struct {
@@ -38,7 +38,8 @@ type StepStorage interface {
 }
 
 type UserDataStorage interface {
-	GetUserData(chatID int64) (userdata.UserData, error)
-	SaveUserData(chatID int64, key string, value any) error
-	ClearUserData(chatID int64) error
+	GetBookID(ctx context.Context, chatID int64) (int64, error)
+	GetLanguage(ctx context.Context, chatID int64) (config.Language, error)
+	SaveBookID(ctx context.Context, chatID, bookID int64) error
+	SaveLanguage(ctx context.Context, chatID int64, language config.Language) error
 }
