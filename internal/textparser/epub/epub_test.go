@@ -17,6 +17,7 @@ var _ = Describe("", func() {
 			sent, err := parser.ParseRandomSentence(book, time.Now().UnixNano())
 			Expect(err).To(Succeed())
 			Expect(sent).NotTo(BeNil())
+			Expect(len(sent)).To(BeNumerically(">", 0))
 			break
 		}
 	})
