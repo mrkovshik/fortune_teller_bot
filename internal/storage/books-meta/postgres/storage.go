@@ -114,6 +114,11 @@ func prepareListQuery(options ...booksmeta.ListOption) (string, []any) {
 		args = append(args, *opts.Language)
 	}
 
+	if opts.Format != nil {
+		conds = append(conds, fmt.Sprintf(`format = $%d`, n))
+		args = append(args, *opts.Format)
+	}
+
 	if len(conds) > 0 {
 		sb.WriteString(" WHERE ")
 		sb.WriteString(strings.Join(conds, " AND "))

@@ -127,6 +127,9 @@ func (s BooksMetaStorage) ListBooks(_ context.Context, options ...booksmeta.List
 		if opts.Title != nil && *opts.Title != book.Title {
 			match = false
 		}
+		if opts.Format != nil && *opts.Format != book.Format {
+			match = false
+		}
 		if match {
 			result = append(result, book)
 		}

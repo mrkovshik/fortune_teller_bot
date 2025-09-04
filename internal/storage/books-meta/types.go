@@ -36,6 +36,7 @@ type ListOptions struct {
 	ID       *int64
 	Title    *string
 	Author   *string
+	Format   *textparser.Format
 	Language *config.Language
 	Ordered  bool
 }
@@ -52,6 +53,13 @@ func WithTitle(title string) ListOption {
 		o.Title = &title
 	}
 }
+
+func WithFormat(format textparser.Format) ListOption {
+	return func(o *ListOptions) {
+		o.Format = &format
+	}
+}
+
 func WithAuthor(author string) ListOption {
 	return func(o *ListOptions) {
 		o.Author = &author
