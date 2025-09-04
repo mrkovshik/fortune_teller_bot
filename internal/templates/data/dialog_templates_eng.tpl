@@ -41,7 +41,7 @@ What would you like to do next?
 
 {{define "quote"}}
 {{.Text}}
-    {{.Title}}
+    {{.Book.Author}}-{{.Book.Title}}
 
 What would you like to do next?
 {{end}}

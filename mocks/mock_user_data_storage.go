@@ -5,10 +5,11 @@
 package mock
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	userdata "github.com/mrkovshik/fortune_teller_bot/internal/storage/userdata"
+	config "github.com/mrkovshik/fortune_teller_bot/internal/config"
 )
 
 // MockUserDataStorage is a mock of UserDataStorage interface.
@@ -34,45 +35,60 @@ func (m *MockUserDataStorage) EXPECT() *MockUserDataStorageMockRecorder {
 	return m.recorder
 }
 
-// ClearUserData mocks base method.
-func (m *MockUserDataStorage) ClearUserData(arg0 int64) error {
+// GetBookID mocks base method.
+func (m *MockUserDataStorage) GetBookID(arg0 context.Context, arg1 int64) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ClearUserData", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ClearUserData indicates an expected call of ClearUserData.
-func (mr *MockUserDataStorageMockRecorder) ClearUserData(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearUserData", reflect.TypeOf((*MockUserDataStorage)(nil).ClearUserData), arg0)
-}
-
-// GetUserData mocks base method.
-func (m *MockUserDataStorage) GetUserData(arg0 int64) (userdata.UserData, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserData", arg0)
-	ret0, _ := ret[0].(userdata.UserData)
+	ret := m.ctrl.Call(m, "GetBookID", arg0, arg1)
+	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUserData indicates an expected call of GetUserData.
-func (mr *MockUserDataStorageMockRecorder) GetUserData(arg0 interface{}) *gomock.Call {
+// GetBookID indicates an expected call of GetBookID.
+func (mr *MockUserDataStorageMockRecorder) GetBookID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserData", reflect.TypeOf((*MockUserDataStorage)(nil).GetUserData), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBookID", reflect.TypeOf((*MockUserDataStorage)(nil).GetBookID), arg0, arg1)
 }
 
-// SaveUserData mocks base method.
-func (m *MockUserDataStorage) SaveUserData(arg0 int64, arg1 string, arg2 interface{}) error {
+// GetLanguage mocks base method.
+func (m *MockUserDataStorage) GetLanguage(arg0 context.Context, arg1 int64) (config.Language, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveUserData", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetLanguage", arg0, arg1)
+	ret0, _ := ret[0].(config.Language)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLanguage indicates an expected call of GetLanguage.
+func (mr *MockUserDataStorageMockRecorder) GetLanguage(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLanguage", reflect.TypeOf((*MockUserDataStorage)(nil).GetLanguage), arg0, arg1)
+}
+
+// SaveBookID mocks base method.
+func (m *MockUserDataStorage) SaveBookID(arg0 context.Context, arg1, arg2 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveBookID", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SaveUserData indicates an expected call of SaveUserData.
-func (mr *MockUserDataStorageMockRecorder) SaveUserData(arg0, arg1, arg2 interface{}) *gomock.Call {
+// SaveBookID indicates an expected call of SaveBookID.
+func (mr *MockUserDataStorageMockRecorder) SaveBookID(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveUserData", reflect.TypeOf((*MockUserDataStorage)(nil).SaveUserData), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveBookID", reflect.TypeOf((*MockUserDataStorage)(nil).SaveBookID), arg0, arg1, arg2)
+}
+
+// SaveLanguage mocks base method.
+func (m *MockUserDataStorage) SaveLanguage(arg0 context.Context, arg1 int64, arg2 config.Language) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveLanguage", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveLanguage indicates an expected call of SaveLanguage.
+func (mr *MockUserDataStorageMockRecorder) SaveLanguage(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveLanguage", reflect.TypeOf((*MockUserDataStorage)(nil).SaveLanguage), arg0, arg1, arg2)
 }

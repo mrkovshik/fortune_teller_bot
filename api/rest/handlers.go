@@ -9,8 +9,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mrkovshik/fortune_teller_bot/internal/embedded/templates"
 	"github.com/mrkovshik/fortune_teller_bot/internal/model"
+	"github.com/mrkovshik/fortune_teller_bot/internal/templates"
 	"go.uber.org/zap"
 )
 
@@ -20,7 +20,7 @@ const (
 	answerCallbackURL = "answerCallbackQuery"
 )
 
-func (s *restAPIServer) MessageReplyHandler(_ context.Context) gin.HandlerFunc {
+func (s *restAPIServer) MessageReplyHandler(ctx context.Context) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if !c.Writer.Written() {
@@ -45,7 +45,7 @@ func (s *restAPIServer) MessageReplyHandler(_ context.Context) gin.HandlerFunc {
 		case update.Message != nil:
 			s.logger.Infof("Got message from chatID: %d : %s", update.Message.Chat.ID, update.Message.Text)
 
-			reply, err := s.updateProcessor.ProcessMessage(update.Message)
+			reply, err := s.updateProcessor.ProcessMessage(ctx, update.Message)
 			if err != nil {
 				s.logger.Warn("ProcessMessage", zap.Error(err))
 				if err := s.sendMessage(map[string]interface{}{
@@ -64,7 +64,7 @@ func (s *restAPIServer) MessageReplyHandler(_ context.Context) gin.HandlerFunc {
 		case update.CallbackQuery != nil:
 			s.logger.Infof("Got callback from chatID: %d", update.CallbackQuery.From.ID)
 
-			reply, err := s.updateProcessor.ProcessCallback(update.CallbackQuery)
+			reply, err := s.updateProcessor.ProcessCallback(ctx, update.CallbackQuery)
 			if err != nil {
 				s.logger.Warn("ProcessCallback", zap.Error(err))
 				_ = s.answerCallbackQuery(update.CallbackQuery.ID)

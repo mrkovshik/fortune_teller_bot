@@ -28,6 +28,7 @@ var (
 	srv             api.Server
 	ctrl            *gomock.Controller
 	updateProcessor *mock.MockUpdateProcessor
+	ctx             context.Context
 )
 
 const testChatID = 111
@@ -68,7 +69,7 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 			"text":         "Что бы вы хотели сделать?",
 			"reply_markup": model.Menus["rus"][model.StartMenu],
 		}
-		updateProcessor.EXPECT().ProcessMessage(upd.Message).Return(payload, nil)
+		updateProcessor.EXPECT().ProcessMessage(gomock.Any(), upd.Message).Return(payload, nil)
 		body, _ := json.Marshal(upd)
 		url := fmt.Sprintf("http://%s:%s/telegram", cfg.Host, cfg.Port)
 		resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
@@ -89,7 +90,7 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 			"chat_id": testChatID,
 			"text":    "Some random quote",
 		}
-		updateProcessor.EXPECT().ProcessMessage(upd.Message).Return(payload, nil)
+		updateProcessor.EXPECT().ProcessMessage(gomock.Any(), upd.Message).Return(payload, nil)
 		body, _ := json.Marshal(upd)
 		url := fmt.Sprintf("http://%s:%s/telegram", cfg.Host, cfg.Port)
 		resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
@@ -112,7 +113,7 @@ var _ = Describe("MessageReplyHandler", Ordered, func() {
 			"chat_id": testChatID,
 			"text":    "Some random quote",
 		}
-		updateProcessor.EXPECT().ProcessCallback(upd.CallbackQuery).Return(payload, nil)
+		updateProcessor.EXPECT().ProcessCallback(gomock.Any(), upd.CallbackQuery).Return(payload, nil)
 		body, _ := json.Marshal(upd)
 		url := fmt.Sprintf("http://%s:%s/telegram", cfg.Host, cfg.Port)
 		resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))

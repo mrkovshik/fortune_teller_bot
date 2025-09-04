@@ -1,4 +1,4 @@
-package local_test
+package inmemory_test
 
 import (
 	"testing"

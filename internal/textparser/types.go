@@ -1,5 +1,9 @@
 package textparser
 
-type TextParcer interface {
-	ParseRandomSentence(data []byte) (string, error)
-}
+type Format string
+
+const (
+	Epub Format = "epub"
+	Fb2  Format = "fb2"
+	Txt  Format = "txt"
+)

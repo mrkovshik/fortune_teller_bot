@@ -8,19 +8,12 @@ import (
 	"strings"
 
 	"github.com/mrkovshik/fortune_teller_bot/internal/textparser/helpers"
-	"go.uber.org/zap"
 	"golang.org/x/net/html"
 )
 
-type TextParser struct {
-	logger *zap.SugaredLogger
-}
+type TextParser struct{}
 
-func NewTextParser(logger *zap.SugaredLogger) *TextParser {
-	return &TextParser{
-		logger: logger,
-	}
-}
+func NewTextParser() *TextParser { return &TextParser{} }
 
 func (tp *TextParser) ParseRandomSentence(data []byte, seed int64) (string, error) {
 	r, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))

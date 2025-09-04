@@ -41,7 +41,7 @@
 
 {{define "quote"}}
 {{.Text}}
-    {{.Title}}
+    {{.Book.Author}}-{{.Book.Title}}
 
 Что бы вы хотели сделать теперь?
 {{end}}
