@@ -31,7 +31,7 @@ func (s UserDataStorage) GetBookID(_ context.Context, chatID int64) (int64, erro
 func (s UserDataStorage) GetLanguage(_ context.Context, chatID int64) (config.Language, error) {
 	languageRaw, ok := s[userdata.GenerateKey(chatID, userdata.LanguageKey)]
 	if !ok {
-		return "", errors.New("language not found")
+		return "", userdata.ErrNotFound
 	}
 	language, ok := languageRaw.(config.Language)
 	if !ok {
